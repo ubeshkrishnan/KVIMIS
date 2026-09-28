@@ -25,11 +25,12 @@ const styles = StyleSheet.create({
   logo: {
     width: 38,
     height: 38,
-    marginRight: 8,
+    position: 'absolute',
+    left: 0,
   },
   textContainer: {
     justifyContent: 'center',
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
   headerText: {
     color: Colors.RedColorDark,

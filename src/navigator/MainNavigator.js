@@ -6,6 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import { SafeAreaView } from 'react-native-safe-area-context';
 const LazyHome = React.lazy(() => import('../(StudentDashboard)/Home/Home'));
 import Login from '../(StudentDashboard)/Login/Login';
 const LazyTimeTable = React.lazy(() =>
@@ -204,7 +205,17 @@ const BottomTabNavigator = ({ navigation }) => {
         name="KVIM"
         component={LazyHome}
         options={{
-          headerTitle: () => <CustomHeader />, // Use the custom header here
+          header: ({ navigation }) => (
+            <View style={{ backgroundColor: Colors.RedColorDark }}>
+              <SafeAreaView edges={['top']} style={{ backgroundColor: Colors.RedColorDark }} />
+              <View style={{ backgroundColor: Colors.WhiteF, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 15, paddingVertical: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <CustomHeader />
+                </View>
+                <LogoutComponent navigation={navigation} />
+              </View>
+            </View>
+          ),
         }}
       />
     </BottomTab.Navigator>

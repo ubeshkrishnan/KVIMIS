@@ -11,6 +11,7 @@ import {
   StyleSheet,
   Dimensions,
   Image,
+  StatusBar,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -149,6 +150,7 @@ const Home = () => {
 
   return (
     <View style={styles.container}>
+      <StatusBar backgroundColor={Colors.RedColorDark} barStyle="light-content" />
       <View style={styles.backgroundContainer}>
         <View style={styles.profileCard}>
           <View style={styles.circularProfile}>
