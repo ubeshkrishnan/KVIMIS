@@ -1,4 +1,4 @@
-import React, {useContext, useState, useEffect} from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,14 +13,14 @@ import {
   responsiveHeight,
   responsiveFontSize,
 } from 'react-native-responsive-dimensions';
-import {DataContext} from '../../context/DataContext';
-import {Url} from '../../../Global_Variable/api_link';
+import { DataContext } from '../../context/DataContext';
+import { Url } from '../../../Global_Variable/api_link';
 import { authenticatedFetch } from '../../../Global_Variable/api_helper';
 import Octicons from 'react-native-vector-icons/Octicons';
-import {globalStyles} from '../../GlobalStyles';
+import { globalStyles } from '../../GlobalStyles';
 
 const Survey = () => {
-  const {userLoginData} = useContext(DataContext);
+  const { userLoginData } = useContext(DataContext);
   const [surveyData, setSurveyData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -41,13 +41,13 @@ const Survey = () => {
   };
 
   return (
-    <View style={{flex: 1}}>
+    <View style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.scrollView}>
         <View style={styles.container}>
           {isLoading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="medium" color={Colors.RedColorDark} />
-              <Text style={{color: Colors.Grey4F}}>Loading</Text>
+              <Text style={{ color: Colors.Grey4F }}>Loading</Text>
             </View>
           ) : surveyData.length === 0 ? (
             <View style={globalStyles.noDataContainer}>
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   semText: {
     color: Colors.RedColorDark,
     fontWeight: '800',
-    fontSize: responsiveFontSize(1.6),
+    fontSize: responsiveFontSize(1.7),
   },
   statusBadge: {
     paddingHorizontal: 10,
@@ -155,11 +155,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   statusText: {
-    fontSize: responsiveFontSize(1.4),
+    fontSize: responsiveFontSize(1.7),
     fontWeight: '800',
   },
   dynamicCardTitle: {
-    fontSize: responsiveFontSize(2.4),
+    fontSize: responsiveFontSize(2.0),
     fontWeight: '800',
     color: Colors.blackF,
     marginBottom: 8,
@@ -171,14 +171,14 @@ const styles = StyleSheet.create({
   },
   valueBranchLable: {
     color: Colors.Grey3F,
-    fontSize: responsiveFontSize(1.6),
+    fontSize: responsiveFontSize(1.7),
     fontStyle: 'italic',
     marginLeft: 6,
     flex: 1,
   },
   rowCardCreatedt: {
     flexDirection: 'row',
-    backgroundColor: Colors.GreyBg,
+    backgroundColor: '#F9F2F3',
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: 'center',
@@ -190,19 +190,19 @@ const styles = StyleSheet.create({
   },
   dateLabel: {
     color: Colors.Grey4F,
-    fontSize: responsiveFontSize(1.6),
+    fontSize: responsiveFontSize(1.8),
     fontWeight: '700',
     marginBottom: 4,
   },
   dateValue: {
     color: Colors.RedColorDark,
-    fontSize: responsiveFontSize(1.8),
+    fontSize: responsiveFontSize(1.7),
     fontWeight: '800',
   },
   divider: {
     height: '60%',
     width: 1,
-    backgroundColor: '#DDD',
+    backgroundColor: 'grey',
   },
   loadingContainer: {
     flex: 1,

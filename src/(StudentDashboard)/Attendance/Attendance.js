@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useContext} from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -11,12 +11,14 @@ import {
   responsiveHeight,
   responsiveFontSize,
 } from 'react-native-responsive-dimensions';
-import {ProgressBar} from 'react-native-paper';
+import { ProgressBar } from 'react-native-paper';
 import Colors from '../../Color';
-import {Url} from '../../../Global_Variable/api_link';
+import { Url } from '../../../Global_Variable/api_link';
 import { authenticatedFetch } from '../../../Global_Variable/api_helper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {DataContext} from '../../context/DataContext';
+import Octicons from 'react-native-vector-icons/Octicons';
+import { DataContext } from '../../context/DataContext';
+import { globalStyles } from '../../GlobalStyles';
 
 const SubjectCard = ({
   subjectCode,
@@ -25,28 +27,33 @@ const SubjectCard = ({
   totalClasses,
   attendancePercentage,
   presentPercentage,
+  showAttendance,
 }) => {
   return (
     <View style={styles.card}>
       <View style={styles.details}>
-        <View style={styles.circleContainer}>
-          <View style={[styles.circle, {borderColor: Colors.RedColorDark}]}>
-            <Text style={styles.circleText}>{presentPercentage + '%'}</Text>
-          </View>
-          <View>
-            <Text style={styles.totalClasses}>
-              Total Classes :{' '}
-              <Text style={{color: Colors.RedColorDark}}>{totalClasses}</Text>
-            </Text>
-            <Text style={styles.totalClasses}>
-              Attended :{' '}
-              <Text style={{color: Colors.RedColorDark}}>
-                {attendancePercentage}
-              </Text>
-            </Text>
-          </View>
-        </View>
-        <Text style={styles.VerticalLine} />
+        {showAttendance == 1 && (
+          <>
+            <View style={styles.circleContainer}>
+              <View style={[styles.circle, { borderColor: Colors.RedColorDark }]}>
+                <Text style={styles.circleText}>{presentPercentage + '%'}</Text>
+              </View>
+              <View>
+                <Text style={styles.totalClasses}>
+                  Total Classes :{' '}
+                  <Text style={{ color: Colors.RedColorDark }}>{totalClasses}</Text>
+                </Text>
+                <Text style={styles.totalClasses}>
+                  Attended :{' '}
+                  <Text style={{ color: Colors.RedColorDark }}>
+                    {attendancePercentage}
+                  </Text>
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.VerticalLine} />
+          </>
+        )}
         <View style={styles.detailsLeft}>
           <Text style={styles.subjectCode}>Course Code: {subjectCode}</Text>
           <Text style={styles.subjectName}>{subjectName}</Text>
@@ -60,14 +67,18 @@ const SubjectCard = ({
 };
 
 const Attendance = () => {
-  const {userLoginData} = useContext(DataContext);
+  const { userLoginData } = useContext(DataContext);
   const [isLoading, setIsLoading] = useState(true);
   const [subjects, setSubjects] = useState([]);
   const [averagePercentage, setAveragePercentage] = useState(0);
+  const [showAttendance, setShowAttendance] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchAttendanceData = async () => {
       try {
+        setIsLoading(true);
+        setError(null);
         const today = new Date();
         const year = today.getFullYear();
         const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -76,18 +87,20 @@ const Attendance = () => {
         const response = await authenticatedFetch(
           `${Url}/attendance?user_id=${userLoginData.user_id}&student_id=${userLoginData.student_id}&semester=${userLoginData.current_semester}&degree_branch_id=${userLoginData.degree_branch_id}&date=${currentDate}`
         );
-        // console.log('attendance url: ', `${Url}/attendance?user_id=${userLoginData.user_id}&student_id=${userLoginData.student_id}&semester=${userLoginData.current_semester}&degree_branch_id=${userLoginData.degree_branch_id}&date=${currentDate}`)
-        // console.log(response)
+
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
+        
         const data = await response.json();
-        // console.log(data);
-        setSubjects(data.final || []); // Set subjects data from 'final' property of the response
-        setAveragePercentage(data.result.present_percentage); // Set average percentage from the result object
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error fetching data:', error);
+        
+        setSubjects(data?.final || []);
+        setAveragePercentage(data?.result?.present_percentage || 0);
+        setShowAttendance(data?.show_attendance);
+      } catch (err) {
+        console.error('Error fetching attendance data:', err);
+        setError(err.message || 'Failed to fetch attendance data');
+      } finally {
         setIsLoading(false);
       }
     };
@@ -100,42 +113,54 @@ const Attendance = () => {
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="medium" color={Colors.RedColorDark} />
-          <Text style={{color: Colors.Grey4F}}>Loading</Text>
+          <Text style={{ color: Colors.Grey4F }}>Loading</Text>
+        </View>
+      ) : error ? (
+        <View style={globalStyles.noDataContainer}>
+          <Octicons name="alert" size={21} color={Colors.sandalF} />
+          <Text style={globalStyles.noDataText}>FAILED TO LOAD ATTENDANCE</Text>
+        </View>
+      ) : subjects.length === 0 ? (
+        <View style={globalStyles.noDataContainer}>
+          <Octicons name="alert" size={21} color={Colors.sandalF} />
+          <Text style={globalStyles.noDataText}>NO ATTENDANCE DATA</Text>
         </View>
       ) : (
         <>
-          <View style={styles.shiftCard}>
-            <Text style={styles.averageText}>Average Attendance</Text>
-            <View style={styles.progressBarContainer}>
-              <View
-                style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-                <Text style={{color: 'black'}}>0</Text>
-                <Text style={{color: 'black'}}>100</Text>
-              </View>
-              <View style={styles.PresentageProgressBar}>
-                <ProgressBar
-                  progress={averagePercentage / 100} // Convert to progress value between 0 and 1
-                  color={Colors.RedColorDark}
-                  style={styles.progressBar}
-                  contentStyle={{color: Colors.Grey4F}}
-                />
-                <View style={styles.progressBarInner}>
-                  <Text style={styles.percentageText}>
-                    {averagePercentage}%
-                  </Text>
+          {showAttendance == 1 && (
+            <View style={styles.shiftCard}>
+              <Text style={styles.averageText}>Average Attendance</Text>
+              <View style={styles.progressBarContainer}>
+                <View
+                  style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <Text style={{ color: 'black' }}>0</Text>
+                  <Text style={{ color: 'black' }}>100</Text>
+                </View>
+                <View style={styles.PresentageProgressBar}>
+                  <ProgressBar
+                    progress={averagePercentage / 100} // Convert to progress value between 0 and 1
+                    color={Colors.RedColorDark}
+                    style={styles.progressBar}
+                    contentStyle={{ color: Colors.Grey4F }}
+                  />
+                  <View style={styles.progressBarInner}>
+                    <Text style={styles.percentageText}>
+                      {averagePercentage}%
+                    </Text>
+                  </View>
                 </View>
               </View>
+              <View style={styles.improvementContainer}>
+                <MaterialCommunityIcons
+                  name="thumb-up"
+                  size={responsiveWidth(6)}
+                  color={Colors.RedColorDark}
+                  style={styles.thumbIcon}
+                />
+                <Text style={styles.improvingText}>You are Improving</Text>
+              </View>
             </View>
-            <View style={styles.improvementContainer}>
-              <MaterialCommunityIcons
-                name="thumb-up"
-                size={responsiveWidth(6)}
-                color={Colors.RedColorDark}
-                style={styles.thumbIcon}
-              />
-              <Text style={styles.improvingText}>You are Improving</Text>
-            </View>
-          </View>
+          )}
           <View>
             {subjects.map((subject, index) => (
               <SubjectCard
@@ -146,6 +171,7 @@ const Attendance = () => {
                 totalClasses={subject.tot_hour}
                 attendancePercentage={subject.attend_hours}
                 presentPercentage={subject.present_percentage || 0}
+                showAttendance={showAttendance}
               />
             ))}
           </View>

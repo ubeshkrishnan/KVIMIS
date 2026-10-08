@@ -41,7 +41,7 @@ const DashboardTicket = () => {
       <Text
         style={{
           color: Colors.Grey4F,
-          fontSize: 20,
+          fontSize: responsiveFontSize(2.3),
           paddingRight: 50,
           fontWeight: '800',
         }}>
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   },
   description: {
     color: Colors.blackF,
-    fontSize: responsiveFontSize(2.2),
+    fontSize: responsiveFontSize(2.0),
     fontWeight: '800',
     marginBottom: 8,
     lineHeight: 24,
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
   label: {
     color: Colors.Grey3F,
     fontWeight: '700',
-    fontSize: responsiveFontSize(1.6),
+    fontSize: responsiveFontSize(1.8),
   },
   CreatedDate: {
     color: 'black',
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
   },
   createDtText: {
     color: Colors.RedColorDark,
-    fontSize: responsiveFontSize(1.5),
+    fontSize: responsiveFontSize(1.7),
     padding: 5,
     width: '100%',
     textAlign: 'center',
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   statusValue: {
-    fontSize: responsiveFontSize(1.5),
+    fontSize: responsiveFontSize(1.7),
     fontWeight: '800',
   },
   StatusLabel: {

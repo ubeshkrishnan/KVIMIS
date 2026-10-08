@@ -144,12 +144,12 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   cardCount: {
-    fontSize: responsiveFontSize(2),
+    fontSize: responsiveFontSize(2.3),
     color: Colors.WhiteF,
     fontWeight: 'bold',
   },
   cardTitle: {
-    fontSize: responsiveFontSize(1.3),
+    fontSize: responsiveFontSize(1.4),
     color: Colors.WhiteF,
     fontWeight: '700',
     textAlign: 'center',
@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
   },
   description: {
     color: Colors.blackF,
-    fontSize: responsiveFontSize(2),
+    fontSize: responsiveFontSize(2.0),
     fontWeight: '800',
     marginBottom: 8,
     lineHeight: 24,
@@ -191,18 +191,20 @@ const styles = StyleSheet.create({
   label: {
     color: Colors.Grey3F,
     fontWeight: '700',
-    fontSize: responsiveFontSize(1.6),
+    fontSize: responsiveFontSize(1.8),
   },
   CreatedDate: {
     color: 'black',
     marginRight: responsiveWidth(2),
     fontWeight: '800',
     textAlign: 'center',
+    fontSize: responsiveFontSize(1.8),
   },
   UpdatedDate: {
     color: 'black',
     fontWeight: '800',
     paddingLeft: responsiveWidth(5),
+    fontSize: responsiveFontSize(1.8),
   },
   rowCardCreatedt: {
     flexDirection: 'row',
@@ -219,18 +221,19 @@ const styles = StyleSheet.create({
   },
   createDtText: {
     color: Colors.RedColorDark,
-    fontSize: responsiveFontSize(1.5),
+    fontSize: responsiveFontSize(1.7),
     padding: 5,
     width: '100%',
     textAlign: 'center',
   },
   statusValue: {
-    color: 'green',
-    fontWeight: 'bold',
+    fontSize: responsiveFontSize(1.7),
+    fontWeight: '800',
   },
   StatusLabel: {
     color: Colors.blackF,
     fontWeight: 'bold',
+    fontSize: responsiveFontSize(1.8),
   },
   divider: {
     height: '100%',
@@ -264,22 +267,18 @@ const styles = StyleSheet.create({
   },
   Status_LastUpdated: {
     color: Colors.Grey3F,
-    fontSize: responsiveFontSize(1.4),
+    fontSize: responsiveFontSize(1.7),
     fontWeight: '600',
   },
   statusLastUpdatedValue: {
     color: Colors.Grey3F,
-    fontSize: responsiveFontSize(1.4),
+    fontSize: responsiveFontSize(1.7),
     fontWeight: '700',
   },
   statusBadge: {
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 20,
-  },
-  statusValue: {
-    fontSize: responsiveFontSize(1.5),
-    fontWeight: '800',
   },
 });
 

@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     width: responsiveWidth(92),
   },
   sectionHeader: {
-    fontSize: responsiveFontSize(2.5),
+    fontSize: responsiveFontSize(2.3),
     color: Colors.Grey4F,
     paddingLeft: responsiveWidth(5),
     fontWeight: 'bold',
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
   },
   Room_NO: {
     color: Colors.Grey3F,
-    fontSize: responsiveFontSize(1.6),
+    fontSize: responsiveFontSize(1.8),
     flexDirection: 'row',
     fontWeight: 'bold',
   },

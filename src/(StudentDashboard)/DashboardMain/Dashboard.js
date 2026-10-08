@@ -54,12 +54,14 @@ const Dashboard = () => {
             `/getHourDetails?batch_id=${userLoginData.batch_id}&degree_branch_id=${userLoginData.degree_branch_id}&user_id=${userLoginData.user_id}&student_id=${userLoginData.student_id}&current_semester=${userLoginData.current_semester}`,
         );
         // console.log(getstaffDetailsResponse)
-        if (
-          !departmentNameResponse.ok ||
-          !libraryResponse.ok ||
-          !getstaffDetailsResponse.ok
-        ) {
-          throw new Error('One or more network responses were not ok');
+        if (!departmentNameResponse.ok) {
+          throw new Error(`Department Name API failed with status: ${departmentNameResponse.status}`);
+        }
+        if (!libraryResponse.ok) {
+          throw new Error(`Library API failed with status: ${libraryResponse.status}`);
+        }
+        if (!getstaffDetailsResponse.ok) {
+          throw new Error(`GetHourDetails API failed with status: ${getstaffDetailsResponse.status}`);
         }
 
         const departmentNameData = await departmentNameResponse.json();
@@ -299,14 +301,14 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   card: {
-    position: 'absolute',
     backgroundColor: Colors.WhiteF,
     elevation: 5,
     padding: responsiveWidth(5),
     width: responsiveWidth(93),
-    height: 0.15 * screenHeight, // Adjusted height to 20% of screen height
+    height: 0.15 * screenHeight,
     borderRadius: responsiveWidth(5),
-    top: '0.7%', // Adjusted for centering the card vertically
+    marginTop: -(0.07 * screenHeight), // Overlap the red header cleanly
+    marginBottom: responsiveHeight(2), // Add spacing below the card
   },
 
   cardContent: {
@@ -332,17 +334,17 @@ const styles = StyleSheet.create({
   },
   headerHello: {
     color: Colors.RedDarkF,
-    fontSize: responsiveFontSize(1.9),
+    fontSize: responsiveFontSize(1.8),
     fontWeight: 'bold',
   },
   headerName: {
     color: 'black',
-    fontSize: responsiveFontSize(2.5),
+    fontSize: responsiveFontSize(2.3),
     fontWeight: '800',
   },
   headerCourse: {
     color: Colors.Grey4F,
-    fontSize: responsiveFontSize(1.5),
+    fontSize: responsiveFontSize(1.7),
     fontStyle: 'italic',
     fontWeight: '400',
   },
@@ -355,7 +357,7 @@ const styles = StyleSheet.create({
   },
   sectionHeader: {
     marginBottom: responsiveHeight(0),
-    fontSize: responsiveFontSize(2.5),
+    fontSize: responsiveFontSize(2.3),
     fontWeight: 'bold',
     marginVertical: 6,
     color: Colors.blackF,
@@ -400,11 +402,11 @@ const styles = StyleSheet.create({
   teacherName: {
     color: Colors.RedDarkF,
     fontWeight: 'bold',
-    fontSize: responsiveFontSize(1.9),
+    fontSize: responsiveFontSize(2.0),
   },
   courseName: {
     color: 'black',
-    fontSize: responsiveFontSize(2.4),
+    fontSize: responsiveFontSize(2.0),
     fontWeight: 'bold',
     marginBottom: responsiveHeight(1),
     width: responsiveWidth(57),
@@ -439,7 +441,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   ActionablecardText: {
-    fontSize: responsiveFontSize(1.6),
+    fontSize: responsiveFontSize(1.7),
     fontWeight: 'bold',
     color: Colors.Grey4F,
     marginTop: 6,
@@ -518,7 +520,7 @@ const styles = StyleSheet.create({
   noScheduleText: {
     color: Colors.Grey4F,
     fontWeight: '700',
-    fontSize: responsiveFontSize(1.7),
+    fontSize: responsiveFontSize(1.8),
     marginLeft: responsiveWidth(2),
   },
 });

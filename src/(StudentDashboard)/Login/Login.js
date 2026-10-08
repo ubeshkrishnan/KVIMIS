@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
   formContainer: {
     backgroundColor: Colors.WhiteColor,
     marginHorizontal: responsiveWidth(5),
-    marginTop: responsiveHeight(-9),
+    marginTop: responsiveHeight(-4),
     borderRadius: responsiveWidth(6),
     paddingHorizontal: responsiveWidth(6),
     paddingVertical: responsiveHeight(4),

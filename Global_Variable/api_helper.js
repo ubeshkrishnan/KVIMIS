@@ -1,3 +1,5 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 export const getSecurityHeaders = () => {
   return {
     'Accept': 'application/json',
@@ -7,8 +9,11 @@ export const getSecurityHeaders = () => {
 };
 
 export const authenticatedFetch = async (url, options = {}) => {
+  const token = await AsyncStorage.getItem('api_token');
+  
   const headers = {
     ...getSecurityHeaders(),
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     ...(options.headers || {}),
   };
 

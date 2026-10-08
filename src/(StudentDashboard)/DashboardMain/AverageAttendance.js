@@ -127,7 +127,7 @@ const AverageAttendance = () => {
             <Text style={styles.cardText}>Present</Text>
             <View style={styles.circle}>
               <Text style={styles.circleText}>
-                {attendanceData?.result?.present_percentage + '%' || ''}
+                {attendanceData?.result ? `${attendanceData.result.present_percentage}%` : '-'}
               </Text>
             </View>
           </View>
@@ -137,7 +137,7 @@ const AverageAttendance = () => {
             <Text style={styles.cardText}>Absent</Text>
             <View style={styles.circleAbsent}>
               <Text style={styles.circleText}>
-                {attendanceData?.result?.absent_percentage + '%' || ''}
+                {attendanceData?.result ? `${attendanceData.result.absent_percentage}%` : '-'}
               </Text>
             </View>
           </View>
@@ -147,7 +147,7 @@ const AverageAttendance = () => {
             <Text style={styles.cardText}>OD</Text>
             <View style={styles.circleAbsent}>
               <Text style={styles.circleText}>
-                {attendanceData?.result?.od_percentage + '%' || ''}
+                {attendanceData?.result ? `${attendanceData.result.od_percentage}%` : '-'}
               </Text>
             </View>
           </View>
@@ -165,17 +165,17 @@ const styles = StyleSheet.create({
     borderRadius: responsiveWidth(5),
     margin: responsiveWidth(2),
     elevation: 5,
-    marginBottom: responsiveHeight(4),
+    marginBottom: responsiveHeight(1),
     width: responsiveWidth(92),
     marginLeft: 8,
   },
   title: {
     marginBottom: responsiveHeight(0),
-    fontSize: responsiveFontSize(2.5),
+    fontSize: responsiveFontSize(2.3),
     fontWeight: 'bold',
     marginVertical: 6,
     color: Colors.blackF,
-    paddingHorizontal: responsiveWidth(2),
+    paddingHorizontal: responsiveWidth(5),
   },
   PresentageProgressBar: {
     alignItems: 'center',
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   percentageText: {
-    fontSize: responsiveFontSize(2),
+    fontSize: responsiveFontSize(2.0),
     fontWeight: '800',
     marginTop: 5,
     color: Colors.WhiteF,
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     color: Colors.RedDarkF,
     fontWeight: '800',
     marginTop: 8,
-    fontSize: responsiveFontSize(1.8),
+    fontSize: responsiveFontSize(2.0),
   },
   attendanceInfoContainer: {
     flexDirection: 'row',
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: responsiveWidth(0),
-    marginBottom: responsiveHeight(4),
+    marginBottom: responsiveHeight(1),
     width: responsiveWidth(80),
     marginLeft: 10,
   },
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cardText: {
-    fontSize: responsiveFontSize(1.7),
+    fontSize: responsiveFontSize(1.8),
     fontWeight: 'bold',
     color: 'black',
     marginRight: responsiveWidth(1),
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
   },
   circleText: {
     color: 'white',
-    fontSize: responsiveFontSize(1.7),
+    fontSize: responsiveFontSize(1.8),
     fontWeight: 'bold',
   },
 });

@@ -26,7 +26,7 @@ const DashboardFee = () => {
           throw new Error('Network response for total paid fee was not ok');
         }
         const data = await response.json();
-        // console.log('Received paid data:', data);
+        console.log('Received paid data:', data);
         setData(data);
 
         setIsLoading(false);
@@ -39,11 +39,18 @@ const DashboardFee = () => {
     fetchData();
   }, []);
 
-  // Render loading state if data is still loading
-  if (isLoading) {
+  // Render loading state or error state if data is missing
+  if (isLoading || !data) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.RedColorDark} />
+      <View style={{marginTop: 0}}>
+        <Text style={styles.averageAttendance}>Fees Information</Text>
+        <View style={[styles.container, { alignItems: 'center', justifyContent: 'center', paddingVertical: 20 }]}>
+          {isLoading ? (
+            <ActivityIndicator size="large" color={Colors.RedColorDark} />
+          ) : (
+            <Text style={{ fontWeight: 'bold', color: Colors.Grey4F }}>No fee data available</Text>
+          )}
+        </View>
       </View>
     );
   }
@@ -162,11 +169,11 @@ const styles = StyleSheet.create({
   },
   paymentStatusCircleText: {
     fontWeight: '800',
-    fontSize: responsiveFontSize(2),
+    fontSize: responsiveFontSize(2.0),
     color: Colors.blackF,
   },
   verticalLinePaid: {
-    fontSize: responsiveFontSize(2), // Adjust as needed
+    fontSize: responsiveFontSize(2.0), // Adjust as needed
     color: Colors.RedDarkF, // Example color, replace with your desired color
     borderLeftWidth: responsiveWidth(1), // Thickness of the line, adjust as needed
     borderLeftColor: Colors.RedDarkF, // Border color, replace with your desired color
@@ -174,7 +181,7 @@ const styles = StyleSheet.create({
     height: responsiveHeight(5),
   },
   verticalLineDue: {
-    fontSize: responsiveFontSize(2), // Adjust as needed
+    fontSize: responsiveFontSize(2.0), // Adjust as needed
     color: Colors.sandalF, // Example color, replace with your desired color
     borderLeftWidth: responsiveWidth(1), // Thickness of the line, adjust as needed
     borderLeftColor: Colors.sandalF, // Border color, replace with your desired color
@@ -186,22 +193,22 @@ const styles = StyleSheet.create({
   },
   feePaid: {
     fontWeight: '800',
-    fontSize: responsiveFontSize(2.5),
+    fontSize: responsiveFontSize(2.0),
     color: Colors.Grey4F,
   },
   feeDue: {
     fontWeight: '800',
     color: Colors.Grey4F,
-    fontSize: responsiveFontSize(2.5),
+    fontSize: responsiveFontSize(2.0),
   },
   amount: {
     fontWeight: '800',
-    fontSize: responsiveFontSize(2.5),
+    fontSize: responsiveFontSize(2.3),
     color: Colors.RedColorDark,
   },
   amountDue: {
     fontWeight: '800',
-    fontSize: responsiveFontSize(2.5),
+    fontSize: responsiveFontSize(2.3),
     color: Colors.sandalF,
   },
   lastPaymentHead: {
@@ -215,21 +222,21 @@ const styles = StyleSheet.create({
   },
   lastPaymentDateLabel: {
     fontWeight: '800',
-    fontSize: responsiveFontSize(1.9),
+    fontSize: responsiveFontSize(1.8),
     color: Colors.blackF,
   },
   lastPaymentDate: {
     fontWeight: '900',
-    fontSize: responsiveFontSize(1.9),
+    fontSize: responsiveFontSize(1.8),
     color: Colors.RedColorDark,
   },
   averageAttendance: {
     marginBottom: responsiveHeight(0),
-    fontSize: responsiveFontSize(2.5),
+    fontSize: responsiveFontSize(2.3),
     fontWeight: 'bold',
     marginVertical: 6,
     color: Colors.blackF,
-    paddingHorizontal: responsiveWidth(1),
-    marginTop: '18%',
+    paddingHorizontal: responsiveWidth(5),
+    marginTop: responsiveHeight(1),
   },
 });
