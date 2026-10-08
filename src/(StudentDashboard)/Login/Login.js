@@ -32,8 +32,8 @@ import { DataContext } from '../../context/DataContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Login = () => {
-  const [username, setUsername] = useState('26mba_logarajp5453@kvimis.co.in');
-  const [password, setPassword] = useState('kvimis@123');
+  const [username, setUsername] = useState('7305186312');
+  const [password, setPassword] = useState('S.Aahash11');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [usernameError, setUsernameError] = useState(null);
@@ -121,6 +121,12 @@ const Login = () => {
       if (response.status === 200) {
         const userData = response.data;
         setUserLoginData(userData);
+
+        // Save the API token securely for production
+        if (userData.api_token) {
+          await AsyncStorage.setItem('api_token', userData.api_token);
+        }
+
         navigation.navigate('Home');
         if (rememberMe) {
           saveCredentials();

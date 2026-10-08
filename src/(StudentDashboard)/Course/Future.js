@@ -43,7 +43,7 @@ const Future = () => {
       try {
         const response = await authenticatedFetch(
           Url +
-          `/future_course?user_id=${userLoginData.user_id}&student_id=${userLoginData.student_id}&degree_branch_id=${userLoginData.degree_branch_id}`,
+          `/future_course?user_id=${userLoginData.user_id}&student_id=${userLoginData.student_id}&degree_branch_id=${userLoginData.degree_branch_id}&semester_no=${userLoginData.current_semester}`,
         );
         // console.log(response);
 

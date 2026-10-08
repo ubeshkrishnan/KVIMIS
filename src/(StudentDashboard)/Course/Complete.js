@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useContext} from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -11,19 +11,19 @@ import {
   responsiveHeight,
   responsiveFontSize,
 } from 'react-native-responsive-dimensions';
-import {globalStyles} from '../../GlobalStyles';
+import { globalStyles } from '../../GlobalStyles';
 import Colors from '../../Color';
-import {DataContext} from '../../context/DataContext';
-import {Url} from '../../../Global_Variable/api_link';
+import { DataContext } from '../../context/DataContext';
+import { Url } from '../../../Global_Variable/api_link';
 import { authenticatedFetch } from '../../../Global_Variable/api_helper';
 import Octicons from 'react-native-vector-icons/Octicons';
 
-const CourseCard = ({course}) => {
+const CourseCard = ({ course }) => {
   const renderCircle = (value, backgroundColor) => (
     <View
       style={[
         styles.circle,
-        {backgroundColor: backgroundColor || Colors.RedColorDark},
+        { backgroundColor: backgroundColor || Colors.RedColorDark },
       ]}>
       <Text style={styles.circleText}>{value}</Text>
     </View>
@@ -34,18 +34,18 @@ const CourseCard = ({course}) => {
       <View style={styles.cardHeader}>
         <Text style={styles.cardTitle}>
           Course Code:
-          <Text style={{fontStyle: 'italic'}}> {course.code}</Text>
+          <Text style={{ fontStyle: 'italic' }}> {course.code}</Text>
         </Text>
         <Text style={styles.CardSem}>Sem: {course.sem_no}</Text>
       </View>
       <Text style={styles.courseName}>{course.course_name}</Text>
-      <View style={styles.row}>
+      {/* <View style={styles.row}>
         <CourseDetail label="Int.Mark " value={course.internal_mark} />
         <View style={styles.divider} />
         <CourseDetail label="Ext. Mark" value={course.external_mark} />
         <View style={styles.divider} />
         <CourseDetail label="Total" value={course.total_mark} />
-      </View>
+      </View> */}
       <View style={styles.row}>
         <View style={[styles.cardGrade, { flex: 0.7 }]}>
           <Text style={styles.gradeLabel}>Result:</Text>
@@ -67,7 +67,7 @@ const CourseCard = ({course}) => {
   );
 };
 
-const CourseDetail = ({label, value}) => {
+const CourseDetail = ({ label, value }) => {
   return (
     <View style={styles.detailContainer}>
       <Text style={styles.cardText}>{label}: </Text>
@@ -79,14 +79,14 @@ const CourseDetail = ({label, value}) => {
 const Complete = () => {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const {userLoginData} = useContext(DataContext);
+  const { userLoginData } = useContext(DataContext);
 
   useEffect(() => {
     const fetchCourseData = async () => {
       try {
         const response = await authenticatedFetch(
           Url +
-            `/course_complete?user_id=${userLoginData.user_id}&student_id=${userLoginData.student_id}&degree_branch_id=${userLoginData.degree_branch_id}`,
+          `/course_complete?user_id=${userLoginData.user_id}&student_id=${userLoginData.student_id}&degree_branch_id=${userLoginData.degree_branch_id}`,
         );
         // console.log(response);
 
@@ -107,7 +107,7 @@ const Complete = () => {
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="medium" color={Colors.RedColorDark} />
-          <Text style={{color: Colors.Grey4F}}>Loading</Text>
+          <Text style={{ color: Colors.Grey4F }}>Loading</Text>
         </View>
       ) : data.length === 0 ? (
         <View style={globalStyles.noDataContainer}>
