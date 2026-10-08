@@ -51,23 +51,29 @@ const CurrentCourseCard = ({ course }) => {
 const Current = () => {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { userLoginData } = useContext(DataContext);
 
   useEffect(() => {
     const fetchCourseData = async () => {
       try {
+        setIsLoading(true);
+        setError(null);
         const response = await authenticatedFetch(
           Url +
           `/current_course?user_id=${userLoginData.user_id}&student_id=${userLoginData.student_id}&semester_no=${userLoginData.current_semester}&degree_branch_id=${userLoginData.degree_branch_id}`,
         );
-        // console.log(response)
 
-        const data = await response.json();
-        console.log("data : ", data)
-        setIsLoading(false);
-        setData(data);
-      } catch (error) {
-        console.error('Error fetching data:', error);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const responseData = await response.json();
+        setData(Array.isArray(responseData) ? responseData : []);
+      } catch (err) {
+        console.error('Error fetching current courses:', err);
+        setError(err.message || 'Failed to fetch current courses');
+      } finally {
         setIsLoading(false);
       }
     };
@@ -81,6 +87,11 @@ const Current = () => {
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="medium" color={Colors.RedColorDark} />
           <Text style={{ color: Colors.Grey4F }}>Loading</Text>
+        </View>
+      ) : error ? (
+        <View style={globalStyles.noDataContainer}>
+          <Octicons name="alert" size={21} color={Colors.sandalF} />
+          <Text style={globalStyles.noDataText}>FAILED TO LOAD COURSES</Text>
         </View>
       ) : data.length === 0 ? (
         <View style={globalStyles.noDataContainer}>
