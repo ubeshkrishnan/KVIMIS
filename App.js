@@ -17,9 +17,8 @@ import {
 import MainContainer from './src/navigator/MainNavigator';
 import SplashScreen from './src/SplashScreen';
 import { DataProvider } from './src/context/DataContext';
-import axios from 'axios';
 import { Url, ios_app_version, android_app_version } from './Global_Variable/api_link';
-import { getSecurityHeaders } from './Global_Variable/api_helper';
+import { authenticatedFetch } from './Global_Variable/api_helper';
 import Colors from './src/Color';
 import {
   responsiveWidth,
@@ -38,15 +37,18 @@ export default function App() {
 
   const checkRestriction = async () => {
     try {
-      const restrict = await axios.get(Url + '/app_block_check', {
-        headers: getSecurityHeaders(),
-      });
-      const restrictStatus = restrict.data[0].status;
-      const expectedStatus = '0';
-      if (restrictStatus !== expectedStatus) {
-        setRestrictionMessage(restrict.data[0].value);
-        setRestricted(true);
-        setModalUpdateVisible(true);
+      const response = await authenticatedFetch(Url + '/app_block_check');
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data[0]) {
+          const restrictStatus = data[0].status;
+          const expectedStatus = '0';
+          if (restrictStatus !== expectedStatus) {
+            setRestrictionMessage(data[0].value);
+            setRestricted(true);
+            setModalUpdateVisible(true);
+          }
+        }
       }
     } catch (err) {
       console.error('Error fetching restriction:', err);
@@ -107,31 +109,31 @@ export default function App() {
 
   const checkAppVersion = async () => {
     try {
-      const appVersionResponse = await axios.get(Url + '/app_version_check', {
-        headers: getSecurityHeaders(),
-      });
-      
-      if (appVersionResponse.data && appVersionResponse.data[0]) {
-        const item = appVersionResponse.data[0];
+      const response = await authenticatedFetch(Url + '/app_version_check');
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data[0]) {
+          const item = data[0];
 
-        if (item.app_url) {
-          setStoreUrlFromApi(item.app_url);
-        }
+          if (item.app_url) {
+            setStoreUrlFromApi(item.app_url);
+          }
 
-        const isIos = Platform.OS === 'ios';
-        const serverVersion = isIos
-          ? item.ios_app_version || item.app_version
-          : item.app_version;
+          const isIos = Platform.OS === 'ios';
+          const serverVersion = isIos
+            ? item.ios_app_version || item.app_version
+            : item.app_version;
 
-        const expectedAppVersion = isIos ? ios_app_version : android_app_version;
+          const expectedAppVersion = isIos ? ios_app_version : android_app_version;
 
-        if (serverVersion !== expectedAppVersion) {
-          setErrorUpdate(
-            'The app is outdated. Please update to the latest version to continue.',
-          );
-          setRestricted(false);
-          setModalUpdateVisible(true);
-          return true;
+          if (serverVersion !== expectedAppVersion) {
+            setErrorUpdate(
+              'The app is outdated. Please update to the latest version to continue.',
+            );
+            setRestricted(false);
+            setModalUpdateVisible(true);
+            return true;
+          }
         }
       }
       return false;

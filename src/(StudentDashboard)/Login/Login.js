@@ -21,7 +21,6 @@ import {
 import { Checkbox } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import axios from 'axios';
 import { Url } from '../../../Global_Variable/api_link';
 import { getSecurityHeaders } from '../../../Global_Variable/api_helper';
 import Colors from '../../Color';
@@ -32,8 +31,8 @@ import { DataContext } from '../../context/DataContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Login = () => {
-  const [username, setUsername] = useState('7305186312');
-  const [password, setPassword] = useState('S.Aahash11');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [usernameError, setUsernameError] = useState(null);
@@ -107,24 +106,36 @@ const Login = () => {
       setPasswordError(null);
       setIsLoading(true);
 
-      const response = await axios.post(
-        Url + '/index',
-        { username: trimmedUsername, password: trimmedPassword },
-        {
-          headers: {
-            ...getSecurityHeaders(),
-            'Content-Type': 'application/json',
-          },
+      const response = await fetch(Url + '/index', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
         },
-      );
+        body: JSON.stringify({
+          username: trimmedUsername,
+          password: trimmedPassword,
+        }),
+      });
 
-      if (response.status === 200) {
-        const userData = response.data;
+      const userData = await response.json().catch(() => null);
+
+      if (response.ok && userData && !userData.message) {
         setUserLoginData(userData);
 
-        // Save the API token securely for production
-        if (userData.api_token) {
-          await AsyncStorage.setItem('api_token', userData.api_token);
+        // Save the API token securely for production (handles various property names from backend)
+        const token =
+          userData.api_token ||
+          userData.token ||
+          userData.access_token ||
+          userData.jwt ||
+          userData?.data?.token ||
+          userData?.data?.api_token ||
+          userData?.data?.access_token;
+
+        if (token) {
+          await AsyncStorage.setItem('api_token', String(token));
         }
 
         navigation.navigate('Home');
@@ -134,14 +145,20 @@ const Login = () => {
           clearCredentials();
         }
       } else {
-        setUsernameError('Incorrect username or password');
+        const dynamicError =
+          userData?.message ||
+          userData?.error ||
+          (response.status === 401 ? 'Invalid Credentials' : `Server error (${response.status})`);
+        setUsernameError(dynamicError);
+        setPasswordError(null);
       }
     } catch (error) {
-      if (error.response) {
-        setPasswordError('Check username and password');
-      } else {
-        setPasswordError('No Internet\nCheck your internet connection!');
-      }
+      const networkError =
+        error?.message && error.message !== 'Failed to fetch'
+          ? error.message
+          : 'Network error. Please check your internet connection.';
+      setUsernameError(networkError);
+      setPasswordError(null);
     } finally {
       setIsLoading(false);
     }

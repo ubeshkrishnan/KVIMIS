@@ -8,17 +8,32 @@ export const getSecurityHeaders = () => {
   };
 };
 
-export const authenticatedFetch = async (url, options = {}) => {
+export const getAuthenticatedHeaders = async () => {
   const token = await AsyncStorage.getItem('api_token');
-  
-  const headers = {
+  const authHeaders = token
+    ? {
+        'Authorization': `Bearer ${token}`,
+        'token': token,
+        'Token': token,
+        'api-token': token,
+        'api_token': token,
+      }
+    : {};
+
+  return {
     ...getSecurityHeaders(),
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-    ...(options.headers || {}),
+    ...authHeaders,
   };
+};
+
+export const authenticatedFetch = async (url, options = {}) => {
+  const headers = await getAuthenticatedHeaders();
 
   return fetch(url, {
     ...options,
-    headers,
+    headers: {
+      ...headers,
+      ...(options.headers || {}),
+    },
   });
 };

@@ -26,7 +26,6 @@ const DashboardFee = () => {
           throw new Error('Network response for total paid fee was not ok');
         }
         const data = await response.json();
-        console.log('Received paid data:', data);
         setData(data);
 
         setIsLoading(false);

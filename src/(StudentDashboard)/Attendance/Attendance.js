@@ -35,13 +35,17 @@ const SubjectCard = ({
         {showAttendance == 1 && (
           <>
             <View style={styles.circleContainer}>
-              <View style={[styles.circle, { borderColor: Colors.RedColorDark }]}>
+              <View
+                style={[styles.circle, { borderColor: Colors.RedColorDark }]}
+              >
                 <Text style={styles.circleText}>{presentPercentage + '%'}</Text>
               </View>
               <View>
                 <Text style={styles.totalClasses}>
                   Total Classes :{' '}
-                  <Text style={{ color: Colors.RedColorDark }}>{totalClasses}</Text>
+                  <Text style={{ color: Colors.RedColorDark }}>
+                    {totalClasses}
+                  </Text>
                 </Text>
                 <Text style={styles.totalClasses}>
                   Attended :{' '}
@@ -85,18 +89,27 @@ const Attendance = () => {
         const day = String(today.getDate()).padStart(2, '0');
         const currentDate = `${year}-${month}-${day}`;
         const response = await authenticatedFetch(
-          `${Url}/attendance?user_id=${userLoginData.user_id}&student_id=${userLoginData.student_id}&semester=${userLoginData.current_semester}&degree_branch_id=${userLoginData.degree_branch_id}&date=${currentDate}`
+          `${Url}/attendance?user_id=${userLoginData.user_id}&student_id=${userLoginData.student_id}&semester=${userLoginData.current_semester}&degree_branch_id=${userLoginData.degree_branch_id}&date=${currentDate}`,
         );
 
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         setSubjects(data?.final || []);
         setAveragePercentage(data?.result?.present_percentage || 0);
-        setShowAttendance(data?.show_attendance);
+
+        // Web portal condition: session_setting == 2 && show_attendance_setting != 2
+        // If show_attendance or show_attendance_setting is explicitly 2, hide attendance.
+        // Otherwise, if 1, not 2, or omitted in API response, show it.
+        const showSetting = data?.show_attendance ?? data?.show_attendance_setting;
+        const shouldShow =
+          showSetting !== undefined && showSetting !== null
+            ? String(showSetting) !== '2'
+            : true;
+        setShowAttendance(shouldShow ? 1 : 2);
       } catch (err) {
         console.error('Error fetching attendance data:', err);
         setError(err.message || 'Failed to fetch attendance data');
@@ -132,7 +145,11 @@ const Attendance = () => {
               <Text style={styles.averageText}>Average Attendance</Text>
               <View style={styles.progressBarContainer}>
                 <View
-                  style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                  }}
+                >
                   <Text style={{ color: 'black' }}>0</Text>
                   <Text style={{ color: 'black' }}>100</Text>
                 </View>
