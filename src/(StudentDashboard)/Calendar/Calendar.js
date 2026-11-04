@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useContext} from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,29 +7,31 @@ import {
   Dimensions,
   TouchableNativeFeedback,
 } from 'react-native';
-import {Calendar as RNCalendar} from 'react-native-calendars';
+import { Calendar as RNCalendar } from 'react-native-calendars';
 import {
   responsiveWidth,
   responsiveHeight,
   responsiveFontSize,
 } from 'react-native-responsive-dimensions';
 import Colors from '../../Color';
-import {Url} from '../../../Global_Variable/api_link';
+import { Url } from '../../../Global_Variable/api_link';
 import { authenticatedFetch } from '../../../Global_Variable/api_helper';
-import {DataContext} from '../../context/DataContext';
-import {globalStyles} from '../../GlobalStyles';
+import { DataContext } from '../../context/DataContext';
+import { globalStyles } from '../../GlobalStyles';
 import Octicons from 'react-native-vector-icons/Octicons';
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 
 const Calendar = () => {
   const today = new Date();
-  const currentDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-  const {userLoginData} = useContext(DataContext);
+  const currentDate = `${today.getFullYear()}-${String(
+    today.getMonth() + 1,
+  ).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const { userLoginData } = useContext(DataContext);
   const [selectedDate, setSelectedDate] = useState(currentDate);
   const [calendarData, setCalendarData] = useState(null);
   const navigation = useNavigation();
 
-  // console.log(selectedDate)
+  console.log(selectedDate);
   const handleDayPress = date => {
     setSelectedDate(date.dateString);
   };
@@ -90,7 +92,8 @@ const Calendar = () => {
           markedDates={getMarkedDates()}
         />
         <TouchableNativeFeedback
-          onPress={() => navigation.navigate('TimeTable')}>
+          onPress={() => navigation.navigate('TimeTable')}
+        >
           <Text style={styles.viewAllText}>View All</Text>
         </TouchableNativeFeedback>
         {calendarData === null ? (

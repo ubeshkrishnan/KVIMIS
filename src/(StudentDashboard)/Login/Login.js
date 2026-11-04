@@ -31,8 +31,8 @@ import { DataContext } from '../../context/DataContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Login = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('6380733224');
+  const [password, setPassword] = useState('Aakash@2004');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [usernameError, setUsernameError] = useState(null);
