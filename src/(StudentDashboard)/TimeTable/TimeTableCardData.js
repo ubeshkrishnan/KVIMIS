@@ -11,7 +11,7 @@ import Colors from '../../Color';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { DataContext } from '../../context/DataContext';
 import { Url } from '../../../Global_Variable/api_link';
-import { authenticatedFetch } from '../../../Global_Variable/api_helper';
+import { authenticatedFetch, logError } from '../../../Global_Variable/api_helper';
 import {
   responsiveWidth,
   responsiveHeight,
@@ -53,38 +53,42 @@ const TimeTableCardData = ({ date }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const fetchData = async () => {
+      if (!userLoginData || !userLoginData.student_id) {
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
+      try {
+        let currentDateParam = date !== 'null-null-null' ? date : undefined;
+        if (!currentDateParam) {
+          const today = new Date();
+          const year = today.getFullYear();
+          const month = String(today.getMonth() + 1).padStart(2, '0');
+          const day = String(today.getDate()).padStart(2, '0');
+          currentDateParam = `${year}-${month}-${day}`;
+        }
+
+        const response = await authenticatedFetch(
+          Url +
+            `/timetable?batch_id=${userLoginData.batch_id}&degree_branch_id=${userLoginData.degree_branch_id}&section=${userLoginData.section}&current_semester=${userLoginData.current_semester}&student_id=${userLoginData.student_id}&current_date=${currentDateParam}`,
+        );
+
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        const responseData = await response.json();
+        setData(responseData);
+        setIsLoading(false);
+      } catch (error) {
+        logError('TimeTable', error);
+        setIsLoading(false);
+      }
+    };
+
     fetchData();
-  }, [date]);
-
-  const fetchData = async () => {
-    setIsLoading(true);
-    try {
-      let currentDateParam = date !== 'null-null-null' ? date : undefined;
-      if (!currentDateParam) {
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        currentDateParam = `${year}-${month}-${day}`;
-      }
-
-      const response = await authenticatedFetch(
-        Url +
-          `/timetable?batch_id=${userLoginData.batch_id}&degree_branch_id=${userLoginData.degree_branch_id}&section=${userLoginData.section}&current_semester=${userLoginData.current_semester}&student_id=${userLoginData.student_id}&current_date=${currentDateParam}`,
-      );
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const responseData = await response.json();
-      setData(responseData);
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Error fetching timetable data:', error);
-      setIsLoading(false);
-    }
-  };
+  }, [date, userLoginData]);
 
   const customIconSize = responsiveFontSize(2.2);
 

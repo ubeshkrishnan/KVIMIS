@@ -9,17 +9,22 @@ import {
 import Colors from '../../Color';
 import {DataContext} from '../../context/DataContext';
 import {Url} from '../../../Global_Variable/api_link';
-import { authenticatedFetch } from '../../../Global_Variable/api_helper';
+import { authenticatedFetch, logError } from '../../../Global_Variable/api_helper';
 
 const Miscellaneous = () => {
-  const userLoginData = useContext(DataContext);
+  const {userLoginData} = useContext(DataContext);
   const [misData, setMisData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchMiscellaneous = async () => {
+      if (!userLoginData || !userLoginData.student_id) {
+        setIsLoading(false);
+        return;
+      }
       try {
-        const apiUrl = `${Url}/miscellaneous_details?student_id=${userLoginData.userLoginData.student_id}`;
+        setIsLoading(true);
+        const apiUrl = `${Url}/miscellaneous_details?student_id=${userLoginData.student_id}`;
         const response = await authenticatedFetch(apiUrl);
 
         if (!response.ok) {
@@ -27,10 +32,10 @@ const Miscellaneous = () => {
         }
 
         const data = await response.json();
-        setMisData(data);
+        setMisData(Array.isArray(data) ? data : []);
         setIsLoading(false);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        logError('Miscellaneous', error);
         setIsLoading(false);
       }
     };
@@ -47,6 +52,7 @@ const Miscellaneous = () => {
             <Text style={{color: Colors.Grey4F}}>Loading</Text>
           </View>
         ) : (
+          Array.isArray(misData) &&
           misData.map((item, index) => (
             <View key={index} style={styles.card}>
               <Row label="Regulation" value={item.regulation || '-'} />
@@ -149,7 +155,6 @@ const styles = StyleSheet.create({
   },
   colon: {
     color: 'black',
-    marginRight: 5,
     fontSize: 17,
     marginRight: 20
   },

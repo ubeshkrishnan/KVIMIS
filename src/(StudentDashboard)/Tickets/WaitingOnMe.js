@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { DataContext } from '../../context/DataContext';
 import { Url } from '../../../Global_Variable/api_link';
-import { authenticatedFetch } from '../../../Global_Variable/api_helper';
+import { authenticatedFetch, logError } from '../../../Global_Variable/api_helper';
 import Colors from '../../Color';
 import { globalStyles } from '../../GlobalStyles';
 import Octicons from 'react-native-vector-icons/Octicons';
@@ -19,32 +19,37 @@ const WaitingOnMe = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!userLoginData || !userLoginData.user_id) {
+        return;
+      }
       try {
         const response = await authenticatedFetch(
           Url + `/waiting_on_me?user_id=${userLoginData.user_id}`,
         );
         if (!response.ok) {
-          throw new Error('Network response for total paid fee was not ok');
+          throw new Error('Network response for tickets was not ok');
         }
         const data = await response.json();
-        setTickets(data.data); // Assuming the ticket data is stored in 'data' field
-        // console.log(data.data)
-        // Convert the 'final' object into an array of objects
+        setTickets(Array.isArray(data?.data) ? data.data : []);
+
+        if (data && data.final && typeof data.final === 'object') {
           const finalDataArray = Object.entries(data.final).map(
             ([title, count]) => ({
               title,
               count,
             }),
           );
-
           setTopCardsData(finalDataArray);
+        } else {
+          setTopCardsData([]);
+        }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        logError('WaitingOnMe', error);
       }
     };
 
     fetchData();
-  }, [userLoginData.user_id]);
+  }, [userLoginData]);
 
   return (
     <View style={styles.container}>

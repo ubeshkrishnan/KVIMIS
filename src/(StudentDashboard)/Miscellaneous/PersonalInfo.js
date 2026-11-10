@@ -9,7 +9,7 @@ import {
 import Colors from '../../Color';
 import {DataContext} from '../../context/DataContext';
 import {Url} from '../../../Global_Variable/api_link';
-import { authenticatedFetch } from '../../../Global_Variable/api_helper';
+import { authenticatedFetch, logError } from '../../../Global_Variable/api_helper';
 import {
   responsiveWidth,
   responsiveHeight,
@@ -17,14 +17,19 @@ import {
 } from 'react-native-responsive-dimensions';
 
 const PersonalInfo = () => {
-  const userLoginData = useContext(DataContext);
+  const {userLoginData} = useContext(DataContext);
   const [personalData, setPersonalData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchPersonalInformation = async () => {
+      if (!userLoginData || !userLoginData.user_id) {
+        setIsLoading(false);
+        return;
+      }
       try {
-        const apiUrl = `${Url}/personal_info?user_id=${userLoginData.userLoginData.user_id}`;
+        setIsLoading(true);
+        const apiUrl = `${Url}/personal_info?user_id=${userLoginData.user_id}`;
         const response = await authenticatedFetch(apiUrl);
 
         if (!response.ok) {
@@ -32,10 +37,10 @@ const PersonalInfo = () => {
         }
 
         const data = await response.json();
-        setPersonalData(data);
+        setPersonalData(Array.isArray(data) ? data : []);
         setIsLoading(false);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        logError('PersonalInfo', error);
         setIsLoading(false);
       }
     };
@@ -52,6 +57,7 @@ const PersonalInfo = () => {
             <Text style={{color: Colors.Grey4F}}>Loading</Text>
           </View>
         ) : (
+          Array.isArray(personalData) &&
           personalData.map((item, index) => (
             <View key={index} style={styles.card}>
               <Row

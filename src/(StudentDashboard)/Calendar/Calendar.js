@@ -15,7 +15,7 @@ import {
 } from 'react-native-responsive-dimensions';
 import Colors from '../../Color';
 import { Url } from '../../../Global_Variable/api_link';
-import { authenticatedFetch } from '../../../Global_Variable/api_helper';
+import { authenticatedFetch, logError } from '../../../Global_Variable/api_helper';
 import { DataContext } from '../../context/DataContext';
 import { globalStyles } from '../../GlobalStyles';
 import Octicons from 'react-native-vector-icons/Octicons';
@@ -31,16 +31,12 @@ const Calendar = () => {
   const [calendarData, setCalendarData] = useState(null);
   const navigation = useNavigation();
 
-  console.log(selectedDate);
   const handleDayPress = date => {
     setSelectedDate(date.dateString);
   };
 
   useEffect(() => {
-    fetchCalendarData(selectedDate); // Initial fetch with selected date
-  }, [selectedDate]); // Fetch data when selected date changes
-
-  const fetchCalendarData = selectedDate => {
+    if (!userLoginData?.user_id) return;
     const apiUrl = `${Url}/calendar?user_id=${userLoginData.user_id}&date=${selectedDate}`;
     authenticatedFetch(apiUrl)
       .then(response => {
@@ -50,6 +46,10 @@ const Calendar = () => {
         return response.json();
       })
       .then(data => {
+        if (!Array.isArray(data)) {
+          setCalendarData([]);
+          return;
+        }
         const uniqueData = data.filter(
           (item, index, self) =>
             index === self.findIndex(t => t.date === item.date),
@@ -57,9 +57,9 @@ const Calendar = () => {
         setCalendarData(uniqueData);
       })
       .catch(error => {
-        console.error('Fetch error:', error);
+        logError('Calendar', error);
       });
-  };
+  }, [selectedDate, userLoginData]);
 
   const getMarkedDates = () => {
     if (!calendarData) {

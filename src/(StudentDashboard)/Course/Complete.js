@@ -15,7 +15,7 @@ import { globalStyles } from '../../GlobalStyles';
 import Colors from '../../Color';
 import { DataContext } from '../../context/DataContext';
 import { Url } from '../../../Global_Variable/api_link';
-import { authenticatedFetch } from '../../../Global_Variable/api_helper';
+import { authenticatedFetch, logError } from '../../../Global_Variable/api_helper';
 import Octicons from 'react-native-vector-icons/Octicons';
 
 const CourseCard = ({ course }) => {
@@ -83,18 +83,21 @@ const Complete = () => {
 
   useEffect(() => {
     const fetchCourseData = async () => {
+      if (!userLoginData?.user_id) {
+        setIsLoading(false);
+        return;
+      }
       try {
         const response = await authenticatedFetch(
           Url +
           `/course_complete?user_id=${userLoginData.user_id}&student_id=${userLoginData.student_id}&degree_branch_id=${userLoginData.degree_branch_id}`,
         );
-        // console.log(response);
 
         const data = await response.json();
         setIsLoading(false);
-        setData(data);
+        setData(Array.isArray(data) ? data : []);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        logError('CourseComplete', error);
         setIsLoading(false);
       }
     };

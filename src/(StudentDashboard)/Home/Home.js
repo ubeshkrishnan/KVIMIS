@@ -56,7 +56,6 @@ const Home = () => {
 
   //   return () => backHandler.remove(); // Remove the event listener on component unmount
   // }, []);
-  // console.log(userLoginData)
   const menuItems = [
     {
       id: 1,

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-nat
 import { DataContext } from '../../context/DataContext';
 import Colors from '../../Color';
 import { Url } from '../../../Global_Variable/api_link';
-import { authenticatedFetch } from '../../../Global_Variable/api_helper';
+import { authenticatedFetch, logError } from '../../../Global_Variable/api_helper';
 import { globalStyles } from '../../GlobalStyles';
 import {
   responsiveHeight,
@@ -36,22 +36,24 @@ const Future = () => {
   const { userLoginData } = useContext(DataContext);
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  // console.log('USER', userLoginData);
 
   useEffect(() => {
     const fetchCourseData = async () => {
+      if (!userLoginData?.user_id) {
+        setIsLoading(false);
+        return;
+      }
       try {
         const response = await authenticatedFetch(
           Url +
           `/future_course?user_id=${userLoginData.user_id}&student_id=${userLoginData.student_id}&degree_branch_id=${userLoginData.degree_branch_id}&semester_no=${userLoginData.current_semester}`,
         );
-        // console.log(response);
 
         const data = await response.json();
         setIsLoading(false);
-        setData(data);
+        setData(Array.isArray(data) ? data : []);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        logError('CourseFuture', error);
         setIsLoading(false);
       }
     };

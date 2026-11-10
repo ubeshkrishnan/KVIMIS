@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
 import {View, Text, TouchableOpacity, StyleSheet, Modal} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Colors from '../Color';
 
@@ -39,9 +40,17 @@ const LogoutComponent = ({navigation}) => {
     setModalVisible(true);
   };
 
-  const handleConfirmLogout = () => {
+  const handleConfirmLogout = async () => {
     setModalVisible(false);
-    navigation.navigate('Login');
+    try {
+      await AsyncStorage.removeItem('api_token');
+    } catch (e) {
+      // ignore
+    }
+    navigation.reset({
+      index: 0,
+      routes: [{name: 'Login'}],
+    });
   };
 
   const handleCancelLogout = () => {

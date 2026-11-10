@@ -17,7 +17,7 @@ import {
 } from 'react-native-responsive-dimensions';
 import {DataContext} from '../../context/DataContext';
 import {Url} from '../../../Global_Variable/api_link';
-import { authenticatedFetch } from '../../../Global_Variable/api_helper';
+import { authenticatedFetch, logError } from '../../../Global_Variable/api_helper';
 import {globalStyles} from '../../GlobalStyles';
 import Octicons from 'react-native-vector-icons/Octicons';
 
@@ -28,21 +28,31 @@ const Library = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchLibraryData(userLoginData.user_id);
-  }, []);
+    if (userLoginData?.user_id) {
+      fetchLibraryData(userLoginData.user_id);
+    } else {
+      setIsLoading(false);
+    }
+  }, [userLoginData?.user_id]);
 
-  const fetchLibraryData = () => {
-    authenticatedFetch(Url + `/library?user_id=${userLoginData.user_id}`)
-      .then(response => response.json())
-      .then(data => {
-        // console.log('LIBss', data);
-        setBookData(data.book_transactions || []);
-        setIsLoading(false);
-      })
-      .catch(error => {
-        console.error('Error fetching data:', error);
-        setIsLoading(false);
-      });
+  const fetchLibraryData = async (userId) => {
+    if (!userId) {
+      setIsLoading(false);
+      return;
+    }
+    try {
+      setIsLoading(true);
+      const response = await authenticatedFetch(Url + `/library?user_id=${userId}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();
+      setBookData(Array.isArray(data?.book_transactions) ? data.book_transactions : []);
+      setIsLoading(false);
+    } catch (error) {
+      logError('Library', error);
+      setIsLoading(false);
+    }
   };
 
   const handleSearch = text => {
@@ -52,9 +62,9 @@ const Library = () => {
   // Safely filter bookData if it's not undefined or null
   const filteredBookData = Array.isArray(bookData)
     ? bookData.filter(book => {
-        const title = book.title || ''; // Fallback to empty string if title is undefined
-        const authorName = book.author_name || ''; // Fallback to empty string if author_name is undefined
-        const accessionNo = book.accession_no || ''; // Fallback to empty string if accession_no is undefined
+        const title = book?.title || ''; // Fallback to empty string if title is undefined
+        const authorName = book?.author_name || ''; // Fallback to empty string if author_name is undefined
+        const accessionNo = book?.accession_no || ''; // Fallback to empty string if accession_no is undefined
 
         return (
           title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -63,7 +73,6 @@ const Library = () => {
         );
       })
     : [];
-//  console.log('bookData: ', bookData)
   return (
     <>
       <View style={styles.container}>

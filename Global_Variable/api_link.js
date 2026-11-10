@@ -1,15 +1,24 @@
 export const ios_app_version = '16';
 export const android_app_version = '22';
-//LIVE path /var/www/html/novaportal_6.0/application/modules/Mobile_app
 
-//live
-export const Url = 'https://portal.kvimis.co.in/Mobile_app';
-export const image_Url = 'https://portal.kvimis.co.in/';
+// Set active environment: 'PRODUCTION' | 'STAGING' | 'LOCAL'
+// For production store release, use 'PRODUCTION'.
+export const CURRENT_ENV = 'LOCAL';
 
-//staging
-// export const Url = 'https://spkvimis.enovasolutions.com/index.php/Mobile_app';
-// export const image_Url = 'https://portal.kvimis.co.in/';
+const ENDPOINTS = {
+  PRODUCTION: {
+    Url: 'https://portal.kvimis.co.in/Mobile_app',
+    image_Url: 'https://portal.kvimis.co.in/',
+  },
+  STAGING: {
+    Url: 'https://spkvimis.enovasolutions.com/index.php/Mobile_app',
+    image_Url: 'https://portal.kvimis.co.in/',
+  },
+  LOCAL: {
+    Url: 'http://172.30.34.188/portal.kvimis.co.in/index.php/Mobile_app',
+    image_Url: 'http://172.30.34.188/portal.kvimis.co.in/',
+  },
+};
 
-// Local
-// export const Url = 'http://localhost:8080/portal.kvimis.co.in/index.php/Mobile_app';
-// export const image_Url = 'http://localhost:8080/portal.kvimis.co.in/';
+export const Url = ENDPOINTS[CURRENT_ENV].Url;
+export const image_Url = ENDPOINTS[CURRENT_ENV].image_Url;

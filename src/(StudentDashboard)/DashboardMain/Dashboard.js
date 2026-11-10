@@ -17,7 +17,7 @@ import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import Octicons from 'react-native-vector-icons/Octicons';
 import {DataContext} from '../../context/DataContext';
 import {Url} from '../../../Global_Variable/api_link';
-import { authenticatedFetch, getSecurityHeaders } from '../../../Global_Variable/api_helper';
+import { authenticatedFetch, getSecurityHeaders, logError } from '../../../Global_Variable/api_helper';
 import {image_Url} from '../../../Global_Variable/api_link';
 import {useNavigation} from '@react-navigation/native';
 import {
@@ -40,6 +40,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!userLoginData?.user_id) return;
       try {
         const departmentNameResponse = await authenticatedFetch(
           Url + `/department_name?student_id=${userLoginData.student_id}`,
@@ -53,7 +54,6 @@ const Dashboard = () => {
           Url +
             `/getHourDetails?batch_id=${userLoginData.batch_id}&degree_branch_id=${userLoginData.degree_branch_id}&user_id=${userLoginData.user_id}&student_id=${userLoginData.student_id}&current_semester=${userLoginData.current_semester}`,
         );
-        // console.log(getstaffDetailsResponse)
         if (!departmentNameResponse.ok) {
           throw new Error(`Department Name API failed with status: ${departmentNameResponse.status}`);
         }
@@ -72,7 +72,7 @@ const Dashboard = () => {
         setStaffDetailData(getstaffDetailsData);
         setFeeData(libraryData);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        logError('Dashboard', error);
       }
     };
 

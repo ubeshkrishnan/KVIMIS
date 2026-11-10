@@ -9,7 +9,7 @@ import {
 import {ProgressBar} from 'react-native-paper';
 import Colors from '../../Color';
 import {Url} from '../../../Global_Variable/api_link';
-import { authenticatedFetch } from '../../../Global_Variable/api_helper';
+import { authenticatedFetch, logError } from '../../../Global_Variable/api_helper';
 import {DataContext} from '../../context/DataContext';
 import {
   responsiveWidth,
@@ -20,31 +20,39 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 
 const FeeDetails = () => {
   const {userLoginData} = useContext(DataContext);
-  // console.log(userLoginData)
   const [feeData, setFeeData] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredFeeData, setFilteredFeeData] = useState([]);
 
   useEffect(() => {
-    fetchFeeData(userLoginData.student_id);
-  }, []);
+    if (userLoginData?.student_id) {
+      fetchFeeData(userLoginData.student_id);
+    } else {
+      setIsLoading(false);
+    }
+  }, [userLoginData?.student_id]);
 
-  const fetchFeeData = async () => {
+  const fetchFeeData = async (studentId) => {
+    if (!studentId) {
+      setIsLoading(false);
+      return;
+    }
     try {
+      setIsLoading(true);
       const response = await authenticatedFetch(
-        `${Url}/fee_details?student_id=${userLoginData.student_id}`,
+        `${Url}/fee_details?student_id=${studentId}`,
       );
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       const data = await response.json();
 
-      setFeeData(data);
-      setFilteredFeeData(data.data); // Set filteredFeeData with fetched data
+      setFeeData(data || {});
+      setFilteredFeeData(Array.isArray(data?.data) ? data.data : []);
       setIsLoading(false);
     } catch (error) {
-      console.error('Error fetching fee data:', error);
+      logError('FeeDetails', error);
       setIsLoading(false);
     }
   };

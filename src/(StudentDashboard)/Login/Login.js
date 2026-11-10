@@ -28,10 +28,11 @@ import KvimLogoText from '../../../assets/Kvim-logo-text.png';
 import KvimLogoIcon from '../../../assets/logo-icon.png';
 import { DataContext } from '../../context/DataContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { logError } from '../../../Global_Variable/api_helper';
 
 const Login = () => {
   const [username, setUsername] = useState('6380733224');
-  const [password, setPassword] = useState('Aakash@2004');
+  const [password, setPassword] = useState('Aakash@2982004');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [usernameError, setUsernameError] = useState(null);
@@ -62,7 +63,7 @@ const Login = () => {
         setRememberMe(true);
       }
     } catch (error) {
-      console.error('Error loading saved credentials:', error);
+      logError('LoginLoadCreds', error);
     }
   };
 
@@ -72,7 +73,7 @@ const Login = () => {
       await AsyncStorage.setItem('password', password);
       await AsyncStorage.setItem('rememberMe', rememberMe.toString());
     } catch (error) {
-      console.error('Error saving credentials:', error);
+      logError('LoginSaveCreds', error);
     }
   };
 
@@ -82,11 +83,12 @@ const Login = () => {
       await AsyncStorage.removeItem('password');
       await AsyncStorage.removeItem('rememberMe');
     } catch (error) {
-      console.error('Error clearing credentials:', error);
+      logError('LoginClearCreds', error);
     }
   };
 
   const handleLogin = async () => {
+    let timeoutId;
     try {
       const trimmedUsername = username.trim();
       const trimmedPassword = password.trim();
@@ -105,8 +107,12 @@ const Login = () => {
       setPasswordError(null);
       setIsLoading(true);
 
+      const controller = new AbortController();
+      timeoutId = setTimeout(() => controller.abort(), 15000);
+
       const response = await fetch(Url + '/index', {
         method: 'POST',
+        signal: controller.signal,
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
@@ -117,6 +123,7 @@ const Login = () => {
           password: trimmedPassword,
         }),
       });
+      clearTimeout(timeoutId);
 
       const userData = await response.json().catch(() => null);
 
@@ -159,6 +166,9 @@ const Login = () => {
       setUsernameError(networkError);
       setPasswordError(null);
     } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       setIsLoading(false);
     }
   };

@@ -8,7 +8,7 @@ import {
 } from 'react-native-responsive-dimensions';
 import {DataContext} from '../../context/DataContext';
 import {Url} from '../../../Global_Variable/api_link';
-import { authenticatedFetch } from '../../../Global_Variable/api_helper';
+import { authenticatedFetch, logError } from '../../../Global_Variable/api_helper';
 
 const DashboardFee = () => {
   const {userLoginData} = useContext(DataContext);
@@ -18,6 +18,10 @@ const DashboardFee = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!userLoginData?.student_id) {
+        setIsLoading(false);
+        return;
+      }
       try {
         const response = await authenticatedFetch(
           Url + `/fee_details?student_id=${userLoginData.student_id}`,
@@ -30,13 +34,13 @@ const DashboardFee = () => {
 
         setIsLoading(false);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        logError('DashboardFee', error);
         setIsLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [userLoginData]);
 
   // Render loading state or error state if data is missing
   if (isLoading || !data) {

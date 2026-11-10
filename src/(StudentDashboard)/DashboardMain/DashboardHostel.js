@@ -1,7 +1,7 @@
 import React, {useState, useContext, useEffect} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import {Url} from '../../../Global_Variable/api_link';
-import { authenticatedFetch } from '../../../Global_Variable/api_helper';
+import { authenticatedFetch, logError } from '../../../Global_Variable/api_helper';
 import Colors from '../../Color';
 import {DataContext} from '../../context/DataContext';
 import {useNavigation} from '@react-navigation/native';
@@ -23,6 +23,10 @@ const DashboardHostel = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!userLoginData || !userLoginData.user_id) {
+        setIsLoading(false);
+        return;
+      }
       try {
         const response1 = await authenticatedFetch(
           Url + `/hostel?user_id=${userLoginData.user_id}`,
@@ -33,8 +37,8 @@ const DashboardHostel = () => {
         }
 
         const data1 = await response1.json();
-        setHostelData(data1.Hostel);
-        setHostelDataCount(data1.outing_type_counts);
+        setHostelData(Array.isArray(data1?.Hostel) ? data1.Hostel : []);
+        setHostelDataCount(data1?.outing_type_counts || []);
 
         const response2 = await authenticatedFetch(
           Url + `/hostelDetails?user_id=${userLoginData.user_id}`,
@@ -45,19 +49,22 @@ const DashboardHostel = () => {
         }
 
         const data2 = await response2.json();
-        setOtherHostelData(data2);
-        setOtherHostelDataCount(data2.length > 0 ? data2[0].hostel_name : []);
+        const safeData2 = Array.isArray(data2) ? data2 : [];
+        setOtherHostelData(safeData2);
+        setOtherHostelDataCount(safeData2.length > 0 ? safeData2[0].hostel_name : []);
 
-        setHostelDataContest(data1.Hostel);
+        if (setHostelDataContest) {
+          setHostelDataContest(Array.isArray(data1?.Hostel) ? data1.Hostel : []);
+        }
         setIsLoading(false);
       } catch (error) {
-        console.error('Error fetching hostel data:', error);
+        logError('DashboardHostel', error);
         setIsLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [userLoginData, setHostelDataContest]);
 
   if (isLoading) {
     return (

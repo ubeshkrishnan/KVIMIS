@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { DataContext } from '../../context/DataContext';
 import { Url } from '../../../Global_Variable/api_link';
-import { authenticatedFetch } from '../../../Global_Variable/api_helper';
+import { authenticatedFetch, logError } from '../../../Global_Variable/api_helper';
 import Colors from '../../Color';
 import { globalStyles } from '../../GlobalStyles';
 import Octicons from 'react-native-vector-icons/Octicons';
@@ -56,15 +56,19 @@ const AllTicket = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!userLoginData || !userLoginData.user_id) {
+        setIsLoading(false);
+        return;
+      }
       try {
         const response = await authenticatedFetch(
           Url + `/my_all_ticket?user_id=${userLoginData.user_id}`,
         );
         if (!response.ok) {
-          throw new Error('Network response for total paid fee was not ok');
+          throw new Error('Network response for tickets was not ok');
         }
         const data = await response.json();
-        if (data && data.data) {
+        if (data && Array.isArray(data.data)) {
           setTickets(data.data);
         } else {
           setTickets([]);
@@ -82,33 +86,30 @@ const AllTicket = () => {
           setTopCardsData([]);
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        logError('AllTicket', error);
       }
     };
-
-
 
     fetchData();
   }, [userLoginData]);
 
-  const fetchRoomNoData = () => {
-    if (!selectedBlockId) {
+  const fetchRoomNoData = (blockId) => {
+    if (!blockId) {
       return;
     }
 
-    authenticatedFetch(Url + `/get_room_no?block_id=${selectedBlockId}`)
+    authenticatedFetch(Url + `/get_room_no?block_id=${blockId}`)
       .then(response => response.json())
       .then(data => {
         if (Array.isArray(data)) {
           setRoomNoData(data);
         } else {
-          console.error('Room data is not an array:', data);
           setRoomNoData([]);
         }
         setIsLoading(false);
       })
       .catch(error => {
-        console.error('Error fetching room data:', error);
+        logError('AllTicketRoom', error);
         setRoomNoData([]);
         setIsLoading(false);
       });
@@ -139,7 +140,14 @@ const AllTicket = () => {
   };
   // useEffect to update form validity whenever any relevant state changes
   useEffect(() => {
-    setIsFormValid(validateForm());
+    const isValid =
+      title.trim() !== '' &&
+      description.trim() !== '' &&
+      selectedTag !== null &&
+      !!ticketTypes &&
+      selectedRoomNo !== '' &&
+      severity !== '';
+    setIsFormValid(isValid);
   }, [
     title,
     description,
@@ -161,9 +169,13 @@ const AllTicket = () => {
       formData.append('ticket_title', title);
       formData.append('ticket_type_id', ticketTypes.id);
       formData.append('rooms', selectedRoomNo); // Use selectedRoomNo here
+      if (!userLoginData?.user_id) {
+        setIsLoading(false);
+        return;
+      }
       formData.append('severity', severity);
       formData.append('status', '1');
-      formData.append('userrole', userLoginData.users_role_id);
+      formData.append('userrole', userLoginData?.users_role_id || '');
       formData.append('users', '2252');
       formData.append('description', description);
       formData.append('created_date', new Date().toISOString());
@@ -178,7 +190,6 @@ const AllTicket = () => {
         },
       );
 
-      // console.log('FORM', formData);
       if (!response.ok) {
         throw new Error('Failed to create ticket');
       }
@@ -192,7 +203,7 @@ const AllTicket = () => {
       setSelectedTicketType('');
       setSelectedRoomNo('');
     } catch (error) {
-      console.error('Error creating ticket:', error);
+      logError('AllTicketCreate', error);
       setIsLoading(false); // Hide loader in case of error
     }
   };
@@ -201,10 +212,10 @@ const AllTicket = () => {
     // Reset all state variables to their initial values
     setTitle('');
     setDescription('');
-    setSelectedTag(''),
-      setSelectedTicketType(''),
-      setSelectedRoomNo(''),
-      setIsModalVisible(false);
+    setSelectedTag('');
+    setSelectedTicketType('');
+    setSelectedRoomNo('');
+    setIsModalVisible(false);
   };
 
   const ModalPopup = () => {

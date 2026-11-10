@@ -13,36 +13,39 @@ import {
   responsiveFontSize,
 } from 'react-native-responsive-dimensions';
 import {Url} from '../../../Global_Variable/api_link';
-import { authenticatedFetch } from '../../../Global_Variable/api_helper';
+import { authenticatedFetch, logError } from '../../../Global_Variable/api_helper';
 import {DataContext} from '../../context/DataContext';
 
 const Results = () => {
   const {userLoginData} = useContext(DataContext);
-  // console.log("USR",userLoginData)
   const [data, setData] = useState({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!userLoginData || !userLoginData.register_number) {
+        setIsLoading(false);
+        return;
+      }
       try {
+        setIsLoading(true);
         const response = await authenticatedFetch(
           `${Url}/e_result?register_number=${userLoginData.register_number}`,
         );
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-        const data = await response.json();
-        // console.log('STDD', data);
-        setData(data);
+        const resData = await response.json();
+        setData(resData || {});
         setIsLoading(false);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        logError('Results', error);
         setIsLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [userLoginData]);
 
   return (
     <ScrollView>

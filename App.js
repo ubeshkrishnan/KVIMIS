@@ -11,7 +11,6 @@ import {
   BackHandler,
   LogBox,
   Platform,
-  ActivityIndicator,
 } from 'react-native';
 import MainContainer from './src/navigator/MainNavigator';
 import SplashScreen from './src/SplashScreen';
@@ -24,7 +23,6 @@ import {
 import {
   authenticatedFetch,
   checkInternetConnection,
-  isNetworkError,
 } from './Global_Variable/api_helper';
 import ErrorBoundary from './src/common/ErrorBoundary';
 import Colors from './src/Color';
@@ -45,7 +43,6 @@ export default function App() {
   const [errorUpdate, setErrorUpdate] = useState(null);
   const [modalUpdateVisible, setModalUpdateVisible] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
-  const [isRetrying, setIsRetrying] = useState(false);
   const [appLoaded, setAppLoaded] = useState(false);
   const [restricted, setRestricted] = useState(false);
   const [restrictionMessage, setRestrictionMessage] = useState(null);
@@ -54,7 +51,7 @@ export default function App() {
   const checkRestriction = useCallback(async () => {
     try {
       const response = await authenticatedFetch(Url + '/app_block_check', {
-        timeout: 8000,
+        timeout: 10000,
       });
       if (response && response.ok) {
         const data = await response.json();
@@ -64,22 +61,13 @@ export default function App() {
           if (restrictStatus !== expectedStatus) {
             setRestrictionMessage(data[0].value);
             setRestricted(true);
-            setIsOffline(false);
             setModalUpdateVisible(true);
           }
         }
       }
     } catch (err) {
-      if (isNetworkError(err)) {
-        if (__DEV__) {
-          console.log(
-            '[Network] Restriction check: Network unavailable (offline).',
-          );
-        }
-        setIsOffline(true);
-        setModalUpdateVisible(true);
-      } else {
-        console.warn('Restriction check error:', err?.message || err);
+      if (__DEV__) {
+        console.log('[App] Restriction check bypassed:', err?.message || err);
       }
     }
   }, []);
@@ -87,7 +75,7 @@ export default function App() {
   const checkAppVersion = useCallback(async () => {
     try {
       const response = await authenticatedFetch(Url + '/app_version_check', {
-        timeout: 8000,
+        timeout: 10000,
       });
       if (response && response.ok) {
         const data = await response.json();
@@ -112,7 +100,6 @@ export default function App() {
               'The app is outdated. Please update to the latest version to continue.',
             );
             setRestricted(false);
-            setIsOffline(false);
             setModalUpdateVisible(true);
             return true;
           }
@@ -120,16 +107,8 @@ export default function App() {
       }
       return false;
     } catch (err) {
-      if (isNetworkError(err)) {
-        if (__DEV__) {
-          console.log(
-            '[Network] Version check: Network unavailable (offline).',
-          );
-        }
-        setIsOffline(true);
-        setModalUpdateVisible(true);
-      } else {
-        console.warn('Version check error:', err?.message || err);
+      if (__DEV__) {
+        console.log('[App] Version check bypassed:', err?.message || err);
       }
       return false;
     }
@@ -139,44 +118,18 @@ export default function App() {
     async nextAppState => {
       if (nextAppState === 'active' || nextAppState === 'background') {
         const isOnline = await checkInternetConnection();
-        if (!isOnline) {
-          if (__DEV__) {
-            console.log('[Network] Device is offline. Showing offline notice.');
-          }
-          setIsOffline(true);
-          setModalUpdateVisible(true);
-          return;
-        }
+        setIsOffline(!isOnline);
 
-        setIsOffline(false);
-        const updateRequired = await checkAppVersion();
-        if (!updateRequired) {
-          await checkRestriction();
+        if (isOnline) {
+          const updateRequired = await checkAppVersion();
+          if (!updateRequired) {
+            await checkRestriction();
+          }
         }
       }
     },
     [checkAppVersion, checkRestriction],
   );
-
-  const handleRetry = async () => {
-    setIsRetrying(true);
-    try {
-      const isOnline = await checkInternetConnection();
-      if (isOnline) {
-        setIsOffline(false);
-        setModalUpdateVisible(false);
-        const updateRequired = await checkAppVersion();
-        if (!updateRequired) {
-          await checkRestriction();
-        }
-      } else {
-        setIsOffline(true);
-        setModalUpdateVisible(true);
-      }
-    } finally {
-      setIsRetrying(false);
-    }
-  };
 
   useEffect(() => {
     handleAppStateChange(AppState.currentState || 'active');
@@ -190,42 +143,29 @@ export default function App() {
     };
   }, [handleAppStateChange]);
 
-  // Auto-monitor network:
-  // 1. When OFFLINE: poll every 2.5s. As soon as connection returns, auto-close popup!
-  // 2. When ONLINE: poll every 8s while active. If connection drops, auto-show popup!
+  // Periodic network monitor: re-checks connection every 10 seconds while app is active
   useEffect(() => {
-    const intervalMs = isOffline ? 2500 : 8000;
     const intervalId = setInterval(async () => {
       if (AppState.currentState !== 'active') return;
 
       const isOnline = await checkInternetConnection();
-      if (isOffline && isOnline) {
-        if (__DEV__) {
-          console.log(
-            '[Network] Connection restored. Automatically closing offline popup.',
-          );
+      setIsOffline(prev => {
+        if (prev && isOnline) {
+          // Came back online: execute pending maintenance checks
+          checkAppVersion().then(updateRequired => {
+            if (!updateRequired) {
+              checkRestriction();
+            }
+          });
         }
-        setIsOffline(false);
-        setModalUpdateVisible(false);
-        const updateRequired = await checkAppVersion();
-        if (!updateRequired) {
-          await checkRestriction();
-        }
-      } else if (!isOffline && !isOnline) {
-        if (__DEV__) {
-          console.log(
-            '[Network] Connection lost. Automatically showing offline popup.',
-          );
-        }
-        setIsOffline(true);
-        setModalUpdateVisible(true);
-      }
-    }, intervalMs);
+        return !isOnline;
+      });
+    }, 10000);
 
     return () => {
       clearInterval(intervalId);
     };
-  }, [isOffline, checkAppVersion, checkRestriction]);
+  }, [checkAppVersion, checkRestriction]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -271,10 +211,21 @@ export default function App() {
               translucent={true}
               animated={true}
             />
+
+            {/* Non-blocking offline notification banner */}
+            {isOffline && (
+              <View style={styles.offlineBanner}>
+                <Text style={styles.offlineBannerText}>
+                  ⚠️ No internet connection. Reconnecting automatically...
+                </Text>
+              </View>
+            )}
+
             <View style={styles.safeArea}>
               <MainContainer />
             </View>
 
+            {/* Modal strictly for mandatory Admin Restrictions or App Updates */}
             <Modal
               visible={modalUpdateVisible}
               transparent={true}
@@ -283,42 +234,12 @@ export default function App() {
                 if (restricted && Platform.OS === 'android') {
                   BackHandler.exitApp();
                 }
-                // Do not dismiss on back press when offline or update required
               }}
             >
               <View style={styles.overlay}>
                 <View style={styles.centeredView}>
                   <View style={styles.modalView}>
-                    {isOffline ? (
-                      <>
-                        <Text style={styles.alertLabel}>
-                          📡 No Internet Connection
-                        </Text>
-                        <Text style={styles.modalText}>
-                          Unable to connect to the server. Please check your internet connection.
-                          {'\n\n'}
-                          Reconnecting automatically once online...
-                        </Text>
-                        <View style={styles.modalButtonRow}>
-                          <TouchableOpacity
-                            style={[styles.actionButton, styles.primaryButton]}
-                            disabled={isRetrying}
-                            onPress={handleRetry}
-                          >
-                            {isRetrying ? (
-                              <ActivityIndicator
-                                size="small"
-                                color={Colors.WhiteF}
-                              />
-                            ) : (
-                              <Text style={styles.primaryButtonText}>
-                                Retry Now
-                              </Text>
-                            )}
-                          </TouchableOpacity>
-                        </View>
-                      </>
-                    ) : restricted ? (
+                    {restricted ? (
                       <>
                         <Text style={styles.updateRequireLabel}>⚠️ Alert</Text>
                         <Text style={styles.modalText}>
@@ -368,6 +289,20 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: Colors.Grey1F,
+  },
+  offlineBanner: {
+    backgroundColor: '#D32F2F',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 9999,
+  },
+  offlineBannerText: {
+    color: '#FFFFFF',
+    fontSize: responsiveFontSize(1.6),
+    fontWeight: '600',
+    textAlign: 'center',
   },
   overlay: {
     flex: 1,
@@ -422,16 +357,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: responsiveFontSize(1.8),
   },
-  secondaryButton: {
-    backgroundColor: Colors.Grey1F || '#F5F5F5',
-    borderWidth: 1,
-    borderColor: Colors.Grey2F || '#E0E0E0',
-  },
-  secondaryButtonText: {
-    color: Colors.Grey4F || '#424242',
-    fontWeight: '600',
-    fontSize: responsiveFontSize(1.8),
-  },
   updateRequireLabel: {
     color: Colors.blackF,
     fontWeight: '800',
@@ -439,7 +364,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   alertLabel: {
-    color: Colors.RedColorDark,
+    color: Colors.blackF,
     fontWeight: 'bold',
     fontSize: responsiveFontSize(2.3),
     marginBottom: 14,

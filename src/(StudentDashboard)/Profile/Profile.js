@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import {View, Text, StyleSheet, Image} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { logError } from '../../../Global_Variable/api_helper';
 
 const UserProfile = () => {
   const [userData, setUserData] = useState({
@@ -48,9 +49,8 @@ const UserProfile = () => {
         });
 
         setUserData(userDataObject);
-        // console.log('Retrieved user data:', userDataObject);
       } catch (error) {
-        console.error('Error retrieving user data:', error);
+        logError('UserProfile', error);
       }
     };
 

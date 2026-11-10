@@ -15,7 +15,7 @@ import {
 } from 'react-native-responsive-dimensions';
 import { DataContext } from '../../context/DataContext';
 import { Url } from '../../../Global_Variable/api_link';
-import { authenticatedFetch } from '../../../Global_Variable/api_helper';
+import { authenticatedFetch, logError } from '../../../Global_Variable/api_helper';
 import Octicons from 'react-native-vector-icons/Octicons';
 import { globalStyles } from '../../GlobalStyles';
 
@@ -25,19 +25,31 @@ const Survey = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchSurveyData();
-  }, []);
+    if (userLoginData?.user_id) {
+      fetchSurveyData(userLoginData.user_id);
+    } else {
+      setIsLoading(false);
+    }
+  }, [userLoginData?.user_id]);
 
-  const fetchSurveyData = () => {
-    authenticatedFetch(Url + `/get_survey?user_id=${userLoginData.user_id}`)
-      .then(response => response.json())
-      .then(data => {
-        setSurveyData(data);
-        setIsLoading(false);
-      })
-      .catch(error => {
-        console.error('Error fetching data:', error);
-      });
+  const fetchSurveyData = async (userId) => {
+    if (!userId) {
+      setIsLoading(false);
+      return;
+    }
+    try {
+      setIsLoading(true);
+      const response = await authenticatedFetch(Url + `/get_survey?user_id=${userId}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();
+      setSurveyData(Array.isArray(data) ? data : []);
+      setIsLoading(false);
+    } catch (error) {
+      logError('Survey', error);
+      setIsLoading(false);
+    }
   };
 
   return (

@@ -14,7 +14,7 @@ import {
 import { ProgressBar } from 'react-native-paper';
 import Colors from '../../Color';
 import { Url } from '../../../Global_Variable/api_link';
-import { authenticatedFetch } from '../../../Global_Variable/api_helper';
+import { authenticatedFetch, logError } from '../../../Global_Variable/api_helper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Octicons from 'react-native-vector-icons/Octicons';
 import { DataContext } from '../../context/DataContext';
@@ -29,43 +29,55 @@ const SubjectCard = ({
   presentPercentage,
   showAttendance,
 }) => {
+  const isAttendanceMode = showAttendance === 1;
+
   return (
-    <View style={styles.card}>
-      <View style={styles.details}>
-        {showAttendance == 1 && (
-          <>
-            <View style={styles.circleContainer}>
-              <View
-                style={[styles.circle, { borderColor: Colors.RedColorDark }]}
-              >
-                <Text style={styles.circleText}>{presentPercentage + '%'}</Text>
-              </View>
-              <View>
-                <Text style={styles.totalClasses}>
-                  Total Classes :{' '}
-                  <Text style={{ color: Colors.RedColorDark }}>
-                    {totalClasses}
-                  </Text>
-                </Text>
-                <Text style={styles.totalClasses}>
-                  Attended :{' '}
-                  <Text style={{ color: Colors.RedColorDark }}>
-                    {attendancePercentage}
-                  </Text>
-                </Text>
-              </View>
+    <View style={[styles.card, !isAttendanceMode && styles.cardWithoutAttendance]}>
+      {isAttendanceMode ? (
+        // Mode 1: With circular percentage and stats (Photo 2)
+        <View style={styles.details}>
+          <View style={styles.circleContainer}>
+            <View
+              style={[styles.circle, { borderColor: Colors.RedColorDark }]}
+            >
+              <Text style={styles.circleText}>{(presentPercentage ?? 0) + '%'}</Text>
             </View>
-            <Text style={styles.VerticalLine} />
-          </>
-        )}
-        <View style={styles.detailsLeft}>
-          <Text style={styles.subjectCode}>Course Code: {subjectCode}</Text>
-          <Text style={styles.subjectName}>{subjectName}</Text>
-          <Text style={styles.horizontalLine} />
-          <Text style={styles.profLabel}>Professor:</Text>
-          <Text style={styles.profName}>{profName}</Text>
+            <View>
+              <Text style={styles.totalClasses}>
+                Total Classes :{' '}
+                <Text style={{ color: Colors.RedColorDark }}>
+                  {totalClasses ?? 0}
+                </Text>
+              </Text>
+              <Text style={styles.totalClasses}>
+                Attended :{' '}
+                <Text style={{ color: Colors.RedColorDark }}>
+                  {attendancePercentage ?? 0}
+                </Text>
+              </Text>
+            </View>
+          </View>
+          <View style={styles.VerticalLine} />
+          <View style={styles.detailsLeft}>
+            <Text style={styles.subjectCode}>Course Code: {subjectCode}</Text>
+            <Text style={styles.subjectName}>{subjectName}</Text>
+            <View style={styles.horizontalLine} />
+            <Text style={styles.profLabel}>Professor:</Text>
+            <Text style={styles.profName}>{profName}</Text>
+          </View>
         </View>
-      </View>
+      ) : (
+        // Mode 2: Clean, full-width card when attendance statistics are hidden (Photo 1)
+        <View style={styles.fullCardContent}>
+          <Text style={styles.subjectCodeFull}>Course Code: {subjectCode}</Text>
+          <Text style={styles.subjectNameFull}>{subjectName}</Text>
+          <View style={styles.horizontalLineFull} />
+          <View style={styles.profRowFull}>
+            <Text style={styles.profLabelFull}>Professor:</Text>
+            <Text style={styles.profNameFull}>{profName}</Text>
+          </View>
+        </View>
+      )}
     </View>
   );
 };
@@ -80,6 +92,12 @@ const Attendance = () => {
 
   useEffect(() => {
     const fetchAttendanceData = async () => {
+      // Guard against null/undefined userLoginData to avoid crashes
+      if (!userLoginData || !userLoginData.student_id) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
         setIsLoading(true);
         setError(null);
@@ -88,6 +106,7 @@ const Attendance = () => {
         const month = String(today.getMonth() + 1).padStart(2, '0');
         const day = String(today.getDate()).padStart(2, '0');
         const currentDate = `${year}-${month}-${day}`;
+
         const response = await authenticatedFetch(
           `${Url}/attendance?user_id=${userLoginData.user_id}&student_id=${userLoginData.student_id}&semester=${userLoginData.current_semester}&degree_branch_id=${userLoginData.degree_branch_id}&date=${currentDate}`,
         );
@@ -98,20 +117,31 @@ const Attendance = () => {
 
         const data = await response.json();
 
-        setSubjects(data?.final || []);
-        setAveragePercentage(data?.result?.present_percentage || 0);
+        // Safely set subject list and average percentage
+        setSubjects(Array.isArray(data?.final) ? data.final : []);
+        const avg = Number(data?.result?.present_percentage);
+        setAveragePercentage(!isNaN(avg) ? avg : 0);
 
-        // Web portal condition: session_setting == 2 && show_attendance_setting != 2
-        // If show_attendance or show_attendance_setting is explicitly 2, hide attendance.
-        // Otherwise, if 1, not 2, or omitted in API response, show it.
-        const showSetting = data?.show_attendance ?? data?.show_attendance_setting;
-        const shouldShow =
-          showSetting !== undefined && showSetting !== null
-            ? String(showSetting) !== '2'
-            : true;
-        setShowAttendance(shouldShow ? 1 : 2);
+        // Web portal condition:
+        // 1 = Show attendance statistics (percentages, classes attended/total, progress bar)
+        // 2 = Hide attendance statistics (display only course & professor info)
+        const showSetting =
+          data?.show_attendance ??
+          data?.show_attendance_setting ??
+          data?.result?.show_attendance ??
+          data?.result?.show_attendance_setting ??
+          data?.session_setting;
+
+        const shouldHide =
+          showSetting !== undefined &&
+          showSetting !== null &&
+          (showSetting === 2 ||
+            showSetting === '2' ||
+            String(showSetting).trim() === '2');
+
+        setShowAttendance(shouldHide ? 2 : 1);
       } catch (err) {
-        console.error('Error fetching attendance data:', err);
+        logError('Attendance', err);
         setError(err.message || 'Failed to fetch attendance data');
       } finally {
         setIsLoading(false);
@@ -122,11 +152,16 @@ const Attendance = () => {
   }, [userLoginData]);
 
   return (
-    <ScrollView>
+    <ScrollView
+      contentContainerStyle={[
+        styles.scrollContent,
+        showAttendance !== 1 && styles.scrollContentNoShift,
+      ]}
+    >
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="medium" color={Colors.RedColorDark} />
-          <Text style={{ color: Colors.Grey4F }}>Loading</Text>
+          <Text style={styles.loadingText}>Loading</Text>
         </View>
       ) : error ? (
         <View style={globalStyles.noDataContainer}>
@@ -140,25 +175,19 @@ const Attendance = () => {
         </View>
       ) : (
         <>
-          {showAttendance == 1 && (
+          {showAttendance === 1 && (
             <View style={styles.shiftCard}>
               <Text style={styles.averageText}>Average Attendance</Text>
               <View style={styles.progressBarContainer}>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <Text style={{ color: 'black' }}>0</Text>
-                  <Text style={{ color: 'black' }}>100</Text>
+                <View style={styles.progressScaleRow}>
+                  <Text style={styles.scaleText}>0</Text>
+                  <Text style={styles.scaleText}>100</Text>
                 </View>
                 <View style={styles.PresentageProgressBar}>
                   <ProgressBar
-                    progress={averagePercentage / 100} // Convert to progress value between 0 and 1
+                    progress={averagePercentage / 100}
                     color={Colors.RedColorDark}
                     style={styles.progressBar}
-                    contentStyle={{ color: Colors.Grey4F }}
                   />
                   <View style={styles.progressBarInner}>
                     <Text style={styles.percentageText}>
@@ -178,10 +207,11 @@ const Attendance = () => {
               </View>
             </View>
           )}
-          <View>
+
+          <View style={styles.subjectListContainer}>
             {subjects.map((subject, index) => (
               <SubjectCard
-                key={index}
+                key={subject.code ? `${subject.code}_${index}` : index}
                 subjectCode={subject.code}
                 subjectName={subject.course_name}
                 profName={subject.prof_name}
@@ -197,19 +227,37 @@ const Attendance = () => {
     </ScrollView>
   );
 };
+
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: Colors.Grey4F,
-    height: '5%',
+  scrollContent: {
+    paddingBottom: responsiveHeight(4),
+  },
+  scrollContentNoShift: {
+    paddingTop: responsiveHeight(2),
+  },
+  subjectListContainer: {
+    paddingBottom: responsiveHeight(2),
   },
   card: {
     backgroundColor: Colors.WhiteF,
-    padding: responsiveWidth(2), // 2% of total screen width
-    borderRadius: responsiveWidth(3), // 3% of total screen width
-    elevation: 5,
-    margin: responsiveWidth(3), // 2% of total screen width
-    marginTop: responsiveWidth(0), // 2% of total screen width
-    height: 'auto',
+    padding: responsiveWidth(2),
+    borderRadius: responsiveWidth(3.5),
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    marginHorizontal: responsiveWidth(3),
+    marginBottom: responsiveHeight(1.5),
+  },
+  // Proper padding and spacing when attendance circle is hidden (Mode 2)
+  cardWithoutAttendance: {
+    paddingHorizontal: responsiveWidth(4.5),
+    paddingVertical: responsiveHeight(1.8),
+    marginHorizontal: responsiveWidth(3.5),
+    marginBottom: responsiveHeight(1.5),
+    borderRadius: responsiveWidth(4),
+    elevation: 3,
   },
   details: {
     flexDirection: 'row',
@@ -226,69 +274,83 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   circle: {
-    height: responsiveWidth(20), // 20% of total screen width
-    width: responsiveWidth(20), // 20% of total screen width
-    borderRadius: responsiveWidth(15), // 15% of total screen width
-    borderWidth: responsiveWidth(1.5), // Increase the thickness to 0.6% of total screen width
+    height: responsiveWidth(20),
+    width: responsiveWidth(20),
+    borderRadius: responsiveWidth(10),
+    borderWidth: responsiveWidth(1.5),
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   circleText: {
-    fontSize: responsiveFontSize(2.2), // 2.2% of total screen width
+    fontSize: responsiveFontSize(2.2),
     fontWeight: 'bold',
     color: Colors.RedColorDark,
   },
   totalClasses: {
     color: Colors.blackF,
-    fontSize: responsiveFontSize(1.8), // 1.8% of total screen width
+    fontSize: responsiveFontSize(1.7),
     fontWeight: '600',
-    marginTop: responsiveHeight(0.5), // 0.5% of total screen height
+    marginTop: responsiveHeight(0.5),
   },
   shiftCard: {
     backgroundColor: Colors.WhiteF,
-    paddingVertical: responsiveHeight(1), // 3% of total screen height
-    paddingHorizontal: responsiveWidth(3), // 5% of total screen width
-    marginHorizontal: responsiveWidth(3), // 2% of total screen width
-    borderRadius: responsiveWidth(5), // 10% of total screen width
-    marginTop: responsiveHeight(2), // 6% of total screen height
+    paddingVertical: responsiveHeight(1.5),
+    paddingHorizontal: responsiveWidth(3.5),
+    marginHorizontal: responsiveWidth(3),
+    borderRadius: responsiveWidth(4),
+    marginTop: responsiveHeight(2),
     elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     marginBottom: responsiveHeight(2),
   },
   averageText: {
-    fontSize: responsiveFontSize(2.3), // 2.5% of total screen width
+    fontSize: responsiveFontSize(2.3),
     fontWeight: 'bold',
     color: 'black',
-    marginBottom: responsiveHeight(2), // 2% of total screen height
+    marginBottom: responsiveHeight(1.5),
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: responsiveHeight(10), // Adjust this value as needed
+    marginTop: responsiveHeight(15),
+  },
+  loadingText: {
+    color: Colors.Grey4F,
+    marginTop: 8,
+  },
+  progressScaleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  scaleText: {
+    color: Colors.blackF || 'black',
   },
   progressBar: {
-    height: responsiveHeight(5), // Adjust as needed
+    height: responsiveHeight(4.5),
     backgroundColor: Colors.Grey2F,
-    borderRadius: responsiveWidth(1.5), // Adjust as needed
+    borderRadius: responsiveWidth(1.5),
   },
-
   progressBarInner: {
     position: 'absolute',
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
+    top: 0,
+    bottom: 0,
   },
   percentageText: {
     color: Colors.WhiteF,
-    fontSize: responsiveFontSize(2), // Adjust as needed
+    fontSize: responsiveFontSize(2),
     fontWeight: '800',
-    marginTop: 5,
   },
   improvingText: {
     color: Colors.RedColorDark,
     fontWeight: '800',
-    fontSize: responsiveFontSize(2), // 2% of total screen width
+    fontSize: responsiveFontSize(2),
     textAlign: 'center',
     margin: 5,
   },
@@ -296,68 +358,84 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: responsiveHeight(2), // 2% of total screen height
+    marginTop: responsiveHeight(1.5),
   },
   VerticalLine: {
     width: 1,
-    height: '100%', // Adjust the height of the line
-    backgroundColor: Colors.blackF,
-    marginHorizontal: responsiveWidth(0.8), // 1% of total screen width
-    color: Colors.RedDarkF,
+    height: '90%',
+    backgroundColor: Colors.borderF || '#E0E0E0',
+    marginHorizontal: responsiveWidth(2),
   },
   horizontalLine: {
     width: '100%',
-    height: 1, // Adjust the height of the line
-    color: Colors.RedDarkF,
-    borderColor: Colors.borderF,
+    height: 1,
+    borderTopColor: Colors.borderF || '#E0E0E0',
+    borderTopWidth: 1,
     borderStyle: 'dashed',
-    borderWidth: 1,
-    marginTop: 5,
+    marginTop: 6,
+    marginBottom: 4,
   },
-  //
   subjectCode: {
-    fontSize: responsiveFontSize(1.8), // 1.8% of total screen width
+    fontSize: responsiveFontSize(1.7),
     fontWeight: '600',
     fontStyle: 'italic',
     color: Colors.Grey4F,
   },
   subjectName: {
-    marginVertical: responsiveHeight(0.3), // 0.5% of total screen height
-    marginHorizontal: responsiveWidth(0), // 1% of total screen width
+    marginVertical: responsiveHeight(0.3),
     color: Colors.blackF,
     fontWeight: 'bold',
-    fontSize: responsiveFontSize(2), // 1.8% of total screen width
-  },
-  subjectTotalClass: {
-    fontSize: responsiveFontSize(1.8),
-    marginVertical: responsiveHeight(0.5),
-    color: 'black',
-  },
-  subjectAttendClass: {
-    fontSize: responsiveFontSize(1.8),
-    marginVertical: responsiveHeight(0.5),
-    color: Colors.LighBlueColor,
-    fontWeight: '800',
-  },
-  subjectAttendancePercentage: {
-    color: Colors.LighBlueColor,
-    fontWeight: '800',
+    fontSize: responsiveFontSize(2),
   },
   profName: {
     color: Colors.blackF,
-    fontSize: responsiveFontSize(1.8), // 1.7% of total screen width
+    fontSize: responsiveFontSize(1.8),
     fontWeight: '800',
   },
   profLabel: {
     color: Colors.RedColorDark,
-    fontSize: responsiveFontSize(1.8), // 1.7% of total screen width
+    fontSize: responsiveFontSize(1.7),
     fontWeight: '800',
-    marginTop: 5,
+    marginTop: 4,
   },
-  profValue: {
+
+  // Full-width card styles when showAttendance == 2
+  fullCardContent: {
+    width: '100%',
+  },
+  subjectCodeFull: {
+    fontSize: responsiveFontSize(1.7),
+    fontWeight: '600',
+    color: Colors.Grey4F,
+    marginBottom: responsiveHeight(0.4),
+  },
+  subjectNameFull: {
+    fontSize: responsiveFontSize(2.1),
+    fontWeight: 'bold',
     color: Colors.blackF,
-    fontSize: responsiveFontSize(1.7), // 1.7% of total screen width
-    fontWeight: '800',
+    marginBottom: responsiveHeight(0.8),
+  },
+  horizontalLineFull: {
+    width: '100%',
+    height: 1,
+    borderTopColor: Colors.borderF || '#E0E0E0',
+    borderTopWidth: 1,
+    borderStyle: 'dashed',
+    marginVertical: responsiveHeight(1),
+  },
+  profRowFull: {
+    marginTop: 2,
+  },
+  profLabelFull: {
+    color: Colors.RedColorDark,
+    fontSize: responsiveFontSize(1.6),
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  profNameFull: {
+    color: Colors.blackF,
+    fontSize: responsiveFontSize(1.8),
+    fontWeight: '700',
   },
 });
 

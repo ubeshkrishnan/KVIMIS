@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import Colors from '../../Color';
 import { Url } from '../../../Global_Variable/api_link';
-import { authenticatedFetch } from '../../../Global_Variable/api_helper';
+import { authenticatedFetch, logError } from '../../../Global_Variable/api_helper';
 import { DataContext } from '../../context/DataContext';
 import {
   responsiveWidth,
@@ -56,6 +56,10 @@ const Current = () => {
 
   useEffect(() => {
     const fetchCourseData = async () => {
+      if (!userLoginData?.user_id) {
+        setIsLoading(false);
+        return;
+      }
       try {
         setIsLoading(true);
         setError(null);
@@ -71,7 +75,7 @@ const Current = () => {
         const responseData = await response.json();
         setData(Array.isArray(responseData) ? responseData : []);
       } catch (err) {
-        console.error('Error fetching current courses:', err);
+        logError('CourseCurrent', err);
         setError(err.message || 'Failed to fetch current courses');
       } finally {
         setIsLoading(false);
