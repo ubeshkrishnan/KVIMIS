@@ -1,5 +1,5 @@
 export const ios_app_version = '16';
-export const android_app_version = '22';
+export const android_app_version = '23';
 
 // Set active environment: 'PRODUCTION' | 'STAGING' | 'LOCAL'
 // For production store release, use 'PRODUCTION'.

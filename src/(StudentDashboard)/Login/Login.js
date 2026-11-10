@@ -31,8 +31,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logError } from '../../../Global_Variable/api_helper';
 
 const Login = () => {
-  const [username, setUsername] = useState('6380733224');
-  const [password, setPassword] = useState('Aakash@2982004');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [usernameError, setUsernameError] = useState(null);
@@ -114,7 +114,7 @@ const Login = () => {
         method: 'POST',
         signal: controller.signal,
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
           'Content-Type': 'application/json',
           'X-Requested-With': 'XMLHttpRequest',
         },
@@ -154,7 +154,9 @@ const Login = () => {
         const dynamicError =
           userData?.message ||
           userData?.error ||
-          (response.status === 401 ? 'Invalid Credentials' : `Server error (${response.status})`);
+          (response.status === 401
+            ? 'Invalid Credentials'
+            : `Server error (${response.status})`);
         setUsernameError(dynamicError);
         setPasswordError(null);
       }
@@ -182,20 +184,23 @@ const Login = () => {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
         <View style={styles.mainContainer}>
           <ScrollView
             contentContainerStyle={styles.scrollContainer}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
-            bounces={false}>
+            bounces={false}
+          >
             <View style={styles.topSection}>
               <View
                 style={[
                   styles.logoWrapper,
                   isSmallScreen && styles.logoWrapperSmall,
                   isLargeScreen && styles.logoWrapperLarge,
-                ]}>
+                ]}
+              >
                 <Image
                   source={KvimLogo}
                   style={[
@@ -221,14 +226,16 @@ const Login = () => {
                   styles.shadowProp,
                   isSmallScreen && styles.formContainerSmall,
                   isLargeScreen && styles.formContainerLarge,
-                ]}>
+                ]}
+              >
                 <View style={styles.formHeader}>
                   <Text
                     style={[
                       styles.heading,
                       isSmallScreen && styles.headingSmall,
                       isLargeScreen && styles.headingLarge,
-                    ]}>
+                    ]}
+                  >
                     Welcome!
                   </Text>
                   <Text
@@ -236,7 +243,8 @@ const Login = () => {
                       styles.loginDetails,
                       isSmallScreen && styles.loginDetailsSmall,
                       isLargeScreen && styles.loginDetailsLarge,
-                    ]}>
+                    ]}
+                  >
                     Login to your account
                   </Text>
                 </View>
@@ -246,7 +254,8 @@ const Login = () => {
                     styles.inputContainer,
                     isSmallScreen && styles.inputContainerSmall,
                     isLargeScreen && styles.inputContainerLarge,
-                  ]}>
+                  ]}
+                >
                   <Icon
                     name="user"
                     size={responsiveFontSize(2.2)}
@@ -274,7 +283,8 @@ const Login = () => {
                     style={[
                       styles.errorText,
                       isSmallScreen && styles.errorTextSmall,
-                    ]}>
+                    ]}
+                  >
                     {usernameError}
                   </Text>
                 )}
@@ -283,7 +293,8 @@ const Login = () => {
                     styles.inputContainer,
                     isSmallScreen && styles.inputContainerSmall,
                     isLargeScreen && styles.inputContainerLarge,
-                  ]}>
+                  ]}
+                >
                   <Icon
                     name="lock"
                     size={responsiveFontSize(2.2)}
@@ -308,7 +319,8 @@ const Login = () => {
                   <TouchableOpacity
                     onPress={toggleShowPassword}
                     style={styles.visibilityButton}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
                     <Icon
                       name={showPassword ? 'eye' : 'eye-slash'}
                       size={responsiveFontSize(2.2)}
@@ -322,7 +334,8 @@ const Login = () => {
                     style={[
                       styles.errorText,
                       isSmallScreen && styles.errorTextSmall,
-                    ]}>
+                    ]}
+                  >
                     {passwordError}
                   </Text>
                 )}
@@ -330,7 +343,8 @@ const Login = () => {
                   style={[
                     styles.checkboxContainer,
                     isSmallScreen && styles.checkboxContainerSmall,
-                  ]}>
+                  ]}
+                >
                   <Checkbox.Android
                     status={rememberMe ? 'checked' : 'unchecked'}
                     onPress={() => setRememberMe(!rememberMe)}
@@ -340,7 +354,8 @@ const Login = () => {
                     style={[
                       styles.rememberMeText,
                       isSmallScreen && styles.rememberMeTextSmall,
-                    ]}>
+                    ]}
+                  >
                     Remember Me
                   </Text>
                 </View>
@@ -353,7 +368,8 @@ const Login = () => {
                   ]}
                   onPress={handleLogin}
                   disabled={isLoading}
-                  activeOpacity={0.8}>
+                  activeOpacity={0.8}
+                >
                   {isLoading ? (
                     <ActivityIndicator
                       color={Colors.WhiteColor}
@@ -365,13 +381,15 @@ const Login = () => {
                         styles.loginButtonCard,
                         isSmallScreen && styles.loginButtonCardSmall,
                         isLargeScreen && styles.loginButtonCardLarge,
-                      ]}>
+                      ]}
+                    >
                       <Text
                         style={[
                           styles.loginButtonText,
                           isSmallScreen && styles.loginButtonTextSmall,
                           isLargeScreen && styles.loginButtonTextLarge,
-                        ]}>
+                        ]}
+                      >
                         Login
                       </Text>
                     </View>
@@ -386,7 +404,8 @@ const Login = () => {
                 style={[
                   styles.poweredBy,
                   isSmallScreen && styles.poweredBySmall,
-                ]}>
+                ]}
+              >
                 Powered by{' '}
               </Text>
               <Image source={KvimLogoIcon} style={styles.poweredByIcon} />
@@ -394,8 +413,10 @@ const Login = () => {
                 style={[
                   styles.fontBold,
                   isSmallScreen && styles.poweredBySmall,
-                ]}>
-                {' '}eNova
+                ]}
+              >
+                {' '}
+                eNova
               </Text>
             </View>
           </View>
