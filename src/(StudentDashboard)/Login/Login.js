@@ -6,13 +6,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
-  SafeAreaView,
   Image,
   ScrollView,
   ActivityIndicator,
   Platform,
   Dimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   responsiveWidth,
   responsiveHeight,
@@ -22,7 +22,6 @@ import { Checkbox } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { Url } from '../../../Global_Variable/api_link';
-import { getSecurityHeaders } from '../../../Global_Variable/api_helper';
 import Colors from '../../Color';
 import KvimLogo from '../../../assets/Kvim-logo.png';
 import KvimLogoText from '../../../assets/Kvim-logo-text.png';
@@ -386,7 +385,7 @@ const Login = () => {
                   styles.fontBold,
                   isSmallScreen && styles.poweredBySmall,
                 ]}>
-                {' '}Enova Solutions
+                {' '}eNova
               </Text>
             </View>
           </View>
@@ -657,9 +656,9 @@ const styles = StyleSheet.create({
   },
   poweredBy: {
     color: Colors.Grey3F || '#9E9E9E',
-    fontSize: responsiveFontSize(1.4),
+    fontSize: responsiveFontSize(1.8),
     textAlign: 'center',
-    fontWeight: '400',
+    fontWeight: '800',
   },
   poweredBySmall: {
     fontSize: responsiveFontSize(1.2),

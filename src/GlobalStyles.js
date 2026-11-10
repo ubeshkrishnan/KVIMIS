@@ -5,7 +5,8 @@ import {
   responsiveHeight,
   responsiveFontSize,
 } from 'react-native-responsive-dimensions';
-import Colors from './Color'; // Adjust the path as needed
+import Colors from './Color';
+import {FontFamily} from './Typography';
 
 export const globalStyles = StyleSheet.create({
   noDataContainer: {
@@ -15,10 +16,13 @@ export const globalStyles = StyleSheet.create({
     marginTop: responsiveHeight(18),
   },
   noDataText: {
+    fontFamily: FontFamily.bold,
     fontSize: responsiveFontSize(2),
     color: Colors.Grey4F,
     textAlign: 'center',
-    fontWeight: '700',
     padding: 10,
+    includeFontPadding: false,
   },
 });
+
+export * from './Typography';

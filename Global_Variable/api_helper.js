@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+export * from './network_helper';
 
 export const getSecurityHeaders = () => {
   return {
@@ -28,12 +29,29 @@ export const getAuthenticatedHeaders = async () => {
 
 export const authenticatedFetch = async (url, options = {}) => {
   const headers = await getAuthenticatedHeaders();
+  const timeoutMs = options.timeout || 15000;
 
-  return fetch(url, {
-    ...options,
-    headers: {
-      ...headers,
-      ...(options.headers || {}),
-    },
-  });
+  let timeoutId;
+  let signal = options.signal;
+  if (!signal && typeof AbortController !== 'undefined') {
+    const controller = new AbortController();
+    signal = controller.signal;
+    timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  }
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal,
+      headers: {
+        ...headers,
+        ...(options.headers || {}),
+      },
+    });
+    return response;
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
 };
