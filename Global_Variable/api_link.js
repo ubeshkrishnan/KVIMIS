@@ -3,7 +3,7 @@ export const android_app_version = '22';
 
 // Set active environment: 'PRODUCTION' | 'STAGING' | 'LOCAL'
 // For production store release, use 'PRODUCTION'.
-export const CURRENT_ENV = 'LOCAL';
+export const CURRENT_ENV = 'PRODUCTION';
 
 const ENDPOINTS = {
   PRODUCTION: {

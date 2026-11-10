@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import { TouchableOpacity } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { setOnUnauthorizedHandler } from '../../Global_Variable/api_helper';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -222,10 +224,28 @@ const BottomTabNavigator = ({ navigation }) => {
   );
 };
 
+export const navigationRef = createNavigationContainerRef();
+
 // Define your MainContainer using Stack Navigator
 function MainContainer() {
+  useEffect(() => {
+    setOnUnauthorizedHandler(async () => {
+      try {
+        await AsyncStorage.removeItem('api_token');
+      } catch (e) {
+        // ignore
+      }
+      if (navigationRef.isReady()) {
+        navigationRef.reset({
+          index: 0,
+          routes: [{ name: 'Login' }],
+        });
+      }
+    });
+  }, []);
+
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator
         initialRouteName="Login" // Set the initial route to BottomTabNavigator
         screenOptions={({ route }) => ({
