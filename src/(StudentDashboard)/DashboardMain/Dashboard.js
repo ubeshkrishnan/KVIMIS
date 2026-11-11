@@ -69,8 +69,68 @@ const Dashboard = () => {
         const getstaffDetailsData = await getstaffDetailsResponse.json();
 
         setData(departmentNameData);
-        setStaffDetailData(getstaffDetailsData);
         setFeeData(libraryData);
+
+        let staffObj = Array.isArray(getstaffDetailsData) && getstaffDetailsData.length > 0
+          ? getstaffDetailsData[0]
+          : getstaffDetailsData;
+
+        // If getHourDetails returned empty, fallback to today's timetable
+        if (!staffObj || (!staffObj.start_time && !staffObj.professor_name && !staffObj.professorName && !staffObj.course_name && !staffObj.labels && !staffObj.date)) {
+          try {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const todayDate = `${year}-${month}-${day}`;
+
+            const ttRes = await authenticatedFetch(
+              Url +
+                `/timetable?batch_id=${userLoginData.batch_id}&degree_branch_id=${userLoginData.degree_branch_id}&section=${userLoginData.section || ''}&current_semester=${userLoginData.current_semester}&student_id=${userLoginData.student_id}&current_date=${todayDate}`,
+            );
+            if (ttRes.ok) {
+              const ttData = await ttRes.json();
+              const classes = Array.isArray(ttData?.final) ? ttData.final : (Array.isArray(ttData) ? ttData : []);
+              if (classes.length > 0) {
+                const now = new Date();
+                const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+                let pickedClass = null;
+                for (const c of classes) {
+                  if (c.start_time && c.end_time) {
+                    const [sH, sM] = c.start_time.split(':').map(Number);
+                    const [eH, eM] = c.end_time.split(':').map(Number);
+                    const startMin = sH * 60 + sM;
+                    const endMin = eH * 60 + eM;
+                    if (nowMinutes >= startMin && nowMinutes <= endMin) {
+                      pickedClass = c;
+                      break;
+                    }
+                  }
+                }
+
+                if (!pickedClass) {
+                  for (const c of classes) {
+                    if (c.start_time) {
+                      const [sH, sM] = c.start_time.split(':').map(Number);
+                      const startMin = sH * 60 + sM;
+                      if (startMin > nowMinutes) {
+                        pickedClass = c;
+                        break;
+                      }
+                    }
+                  }
+                }
+
+                staffObj = pickedClass || classes[0];
+              }
+            }
+          } catch (e) {
+            logError('DashboardTimetableFallback', e);
+          }
+        }
+
+        setStaffDetailData(staffObj && typeof staffObj === 'object' ? staffObj : null);
       } catch (error) {
         logError('Dashboard', error);
       }
@@ -130,6 +190,7 @@ const Dashboard = () => {
           typeof staffDetailData === 'object' &&
           (staffDetailData.start_time ||
             staffDetailData.professor_name ||
+            staffDetailData.professorName ||
             staffDetailData.course_name ||
             staffDetailData.labels ||
             staffDetailData.date) ? (
@@ -144,11 +205,11 @@ const Dashboard = () => {
               />
               <View style={styles.teacherDetails}>
                 <Text style={styles.teacherName}>
-                  {staffDetailData?.professor_name || staffDetailData?.date}
+                  {staffDetailData?.professor_name || staffDetailData?.professorName || staffDetailData?.date}
                 </Text>
                 <Text style={styles.courseName}>
                   {staffDetailData?.start_time && staffDetailData?.end_time
-                    ? staffDetailData?.course_name || ''
+                    ? staffDetailData?.course_name || staffDetailData?.code || ''
                     : staffDetailData?.labels || ''}
                 </Text>
                 <View style={{flexDirection: 'row'}}>
