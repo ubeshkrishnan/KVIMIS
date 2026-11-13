@@ -1,4 +1,4 @@
-export const ios_app_version = '16';
+export const ios_app_version = '18';
 export const android_app_version = '23';
 
 // Set active environment: 'PRODUCTION' | 'STAGING' | 'LOCAL'
